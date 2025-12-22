@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaluteFacile - PS Management</title>
+
+    <!-- Tailwind Config + Tailwind CSS -->
+    <script src="frontend/utils/tailwind-config.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Flatpickr -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://npmcdn.com/flatpickr/dist/l10n/it.js"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Merriweather:ital,wght@0,300;0,400;0,700;1,300&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" href="frontend/media/icons/mainLogo.png">
+    <link rel="apple-touch-icon" href="frontend/media/icons/mainLogo.png">
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <link rel="stylesheet" href="frontend/styles/main.css?v=3">
+    <script>
+        // Configurazione OIDC (sovrascrivibile negli ambienti reali)
+        window.OIDC_CONFIG = {
+            issuer: 'http://127.0.0.1:8080',
+            authorizationEndpoint: 'http://127.0.0.1:8080/authorize',
+            tokenEndpoint: 'http://127.0.0.1:8080/oauth/token',
+            clientId: 'salutefacile-spa',
+            redirectUri: window.location.origin,
+            scopes: 'openid profile email offline_access',
+            audience: 'salutefacile-api'
+        };
+        // Modalità dev senza IdP: evita il redirect se OIDC non è disponibile
+        window.DEV_AUTH_MODE = 'static';
+        window.DEV_API_TOKEN = 'dev-operator-token';
+    </script>
+</head>
+<body>
+    <div id="app"></div>
+
+    <script type="module">
+        import { permissionDeniedTemplate, notFoundTemplate } from './frontend/components/templates/SecurityTemplates.js';
+        import allowedHosts from './frontend/config/allowedHosts.js';
+        import { ensureAuthenticated, getAccessToken } from './frontend/auth/oidc.js';
+
+        const currentHost = window.location.host;
+        const isAllowed = allowedHosts.includes(currentHost);
+
+        function renderAndInitIcons(templateFn) {
+            document.body.innerHTML = templateFn();
+            if (window.lucide && typeof window.lucide.createIcons === 'function') {
+                window.lucide.createIcons();
+            }
+            const retryBtn = document.getElementById('sf-retry-btn');
+            if (retryBtn) {
+                retryBtn.addEventListener('click', () => window.location.href = '/');
+            }
+        }
+
+        const useStaticAuth = window.DEV_AUTH_MODE === 'static';
+
+        const bootstrap = async () => {
+            if (!isAllowed) {
+                renderAndInitIcons(permissionDeniedTemplate);
+                return;
+            }
+            const appRoot = document.getElementById('app');
+            if (!appRoot) {
+                renderAndInitIcons(notFoundTemplate);
+                return;
+            }
+            if (useStaticAuth) {
+                const devToken = window.DEV_API_TOKEN || localStorage.getItem('SF_API_TOKEN');
+                if (!devToken) {
+                    alert('Modalità static: imposta window.DEV_API_TOKEN o localStorage.SF_API_TOKEN');
+                    return;
+                }
+                window.API_TOKEN = devToken;
+                import('./frontend/app.js');
+                return;
+            }
+
+            const token = await ensureAuthenticated();
+            if (!token) return; // già reindirizzato
+            window.API_TOKEN = getAccessToken();
+            import('./frontend/app.js');
+        };
+
+        bootstrap().catch((err) => {
+            console.error('Auth/bootstrap error:', err);
+            renderAndInitIcons(permissionDeniedTemplate);
+        });
+    </script>
+</body>
+</html>

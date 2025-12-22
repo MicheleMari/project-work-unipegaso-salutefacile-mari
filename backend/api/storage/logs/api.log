@@ -1,0 +1,7 @@
+{"ts":"2025-12-20T00:08:46+00:00","status":204,"method":"OPTIONS","path":"\/api\/appointments","ip":"127.0.0.1","user":null,"context":{"preflight":true}}
+{"ts":"2025-12-20T00:11:09+00:00","status":204,"method":"OPTIONS","path":"\/api\/appointments","ip":"127.0.0.1","user":null,"context":{"preflight":true}}
+{"ts":"2025-12-20T00:18:32+00:00","status":204,"method":"OPTIONS","path":"\/api\/appointments","ip":"127.0.0.1","user":null,"context":{"preflight":true}}
+{"ts":"2025-12-20T00:18:32+00:00","status":200,"method":"GET","path":"\/api\/appointments","ip":"127.0.0.1","user":"operator"}
+{"ts":"2025-12-20T00:20:16+00:00","status":204,"method":"OPTIONS","path":"\/api\/appointments","ip":"127.0.0.1","user":null,"context":{"preflight":true}}
+{"ts":"2025-12-20T00:20:16+00:00","status":200,"method":"GET","path":"\/api\/appointments","ip":"127.0.0.1","user":"operator"}
+{"ts":"2025-12-20T00:20:19+00:00","status":200,"method":"GET","path":"\/api\/appointments","ip":"127.0.0.1","user":"operator"}

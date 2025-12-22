@@ -1,0 +1,11 @@
+[
+  { "name": "Medicina Generale", "icon": "activity", "color": "blue" },
+  { "name": "Cardiologia", "icon": "heart-pulse", "color": "red" },
+  { "name": "Chirurgia Generale", "icon": "scissors", "color": "emerald" },
+  { "name": "Ortopedia", "icon": "bone", "color": "orange" },
+  { "name": "Neurologia", "icon": "brain", "color": "purple" },
+  { "name": "Ginecologia", "icon": "user", "color": "pink" },
+  { "name": "Pediatria", "icon": "baby", "color": "cyan" },
+  { "name": "Oculistica", "icon": "eye", "color": "indigo" },
+  { "name": "Malattie Infettive", "icon": "biohazard", "color": "yellow" }
+]

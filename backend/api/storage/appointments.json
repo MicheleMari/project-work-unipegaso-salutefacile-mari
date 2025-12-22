@@ -1,0 +1,68 @@
+[
+    {
+        "id": 1055,
+        "paziente_nome": "Bianchi Luigi",
+        "cf": "BNCLGU80A01H501U",
+        "priorita": "red",
+        "stato": "In Visita",
+        "data_visita": "2025-12-19T19:39:25+00:00",
+        "dottore": "Dr. House (Cardiologia)",
+        "parametri": "PA 140\/90, FC 110",
+        "indirizzo": "Via delle Rose 15",
+        "citta": "Roma",
+        "telefono": "3339998877",
+        "email": "l.bianchi@email.it"
+    },
+    {
+        "id": 1054,
+        "paziente_nome": "Verdi Mario",
+        "cf": "VRDMRA90B12L219K",
+        "priorita": "orange",
+        "stato": "Attesa Esiti",
+        "data_visita": "2025-12-19T19:09:25+00:00",
+        "dottore": "Dr. Rossi (Med. Gen)",
+        "parametri": "Dolore toracico",
+        "referto": {
+            "esito": "Sospetta angina",
+            "terapia": "Attesa troponina",
+            "allegati": []
+        }
+    },
+    {
+        "id": 1053,
+        "paziente_nome": "Neri Giulia",
+        "cf": "NRIGLI95C45H501Z",
+        "priorita": "green",
+        "stato": "Refertato",
+        "data_visita": "2025-12-19T18:09:25+00:00",
+        "dottore": "Dr. Grey (Ortopedia)",
+        "parametri": "Trauma caviglia",
+        "referto": {
+            "esito": "Distorsione semplice. No fratture.",
+            "terapia": "Ghiaccio e riposo 5gg.",
+            "allegati": []
+        },
+        "indirizzo": "Corso Italia 1",
+        "citta": "Milano"
+    },
+    {
+        "id": 1052,
+        "paziente_nome": "Gialli Luca",
+        "cf": "GLLLCU70E10F205A",
+        "priorita": "white",
+        "stato": "Registrato",
+        "data_visita": "2025-12-19T14:36:05+00:00",
+        "dottore": "-",
+        "parametri": "-"
+    },
+    {
+        "id": 1051,
+        "paziente_nome": "Rosa Anna",
+        "cf": "RSANNA82M50L219Q",
+        "priorita": "orange",
+        "stato": "OBI",
+        "data_visita": "2025-12-19T19:49:25+00:00",
+        "dottore": "Dr. House",
+        "parametri": "Osservazione dolore addominale"
+    }
+]

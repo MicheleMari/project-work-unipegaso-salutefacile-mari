@@ -53,7 +53,7 @@ export function renderLoginPage(root) {
                         <p class="text-sm text-slate-500">Accedi con le credenziali della tabella utenti o usa i profili di test.</p>
                     </div>
                     <div class="space-y-2">
-                        <label class="text-sm font-semibold text-slate-700">Email e Password</label>
+                        <label class="text-sm font-semibold text-slate-700">Email o Codice Identità & Password</label>
                         <div class="flex flex-col gap-2">
                             <label class="flex items-center justify-between text-xs text-slate-500 font-semibold select-none px-1">
                                 <span>Memorizza per accesso rapido</span>
@@ -61,8 +61,13 @@ export function renderLoginPage(root) {
                                     <span id="remember-knob" class="inline-block h-4 w-4 rounded-full bg-slate-300 transform translate-x-0 transition"></span>
                                 </button>
                             </label>
-                            <input id="login-email" type="email" placeholder="email@ospedale.test" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-medical-500" />
-                            <input id="login-password" type="password" placeholder="Password" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-medical-500" />
+                            <input id="login-email" type="text" placeholder="email@ospedale.test oppure OPS001" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-medical-500" />
+                            <div class="relative flex items-center">
+                                <input id="login-password" type="password" placeholder="Password" class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-medical-500 pr-10" />
+                                <button type="button" id="toggle-password" class="absolute right-3 text-slate-400 hover:text-medical-600 transition" aria-label="Mostra/Nascondi password">
+                                    <i id="toggle-password-icon" data-lucide="eye" class="w-4 h-4"></i>
+                                </button>
+                            </div>
                             <button id="manual-login" class="px-4 py-2.5 rounded-xl bg-medical-600 text-white font-semibold hover:bg-medical-700 transition [background:linear-gradient(90deg,#0ea5e9,#0284c7)]">Accedi</button>
                             <p id="login-error" class="text-sm text-red-600 font-semibold hidden">Errore: controlla email o password.</p>
                         </div>
@@ -106,6 +111,7 @@ export function bindLoginHandlers(root, onLogin) {
     const manualBtn = root.querySelector('#manual-login');
     const emailInput = root.querySelector('#login-email');
     const passInput = root.querySelector('#login-password');
+    const togglePass = root.querySelector('#toggle-password');
     const quickToggle = root.querySelector('#toggle-quick');
     const quickContainer = root.querySelector('#quick-container');
     const quickChevron = root.querySelector('#quick-chevron');
@@ -163,6 +169,16 @@ export function bindLoginHandlers(root, onLogin) {
             const password = passInput.value;
             if (!email || !password) return;
             handleLogin(email, password, onLogin);
+        });
+    }
+
+    if (togglePass && passInput) {
+        togglePass.addEventListener('click', () => {
+            const isPassword = passInput.getAttribute('type') === 'password';
+            passInput.setAttribute('type', isPassword ? 'text' : 'password');
+            const iconName = isPassword ? 'eye-off' : 'eye';
+            togglePass.innerHTML = `<i data-lucide="${iconName}" class="w-4 h-4"></i>`;
+            if (window.lucide) window.lucide.createIcons();
         });
     }
 }

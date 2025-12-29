@@ -18,10 +18,10 @@ class AuthController
     public function login(Request $request): void
     {
         $body = $request->getBody();
-        $email = trim((string) ($body['email'] ?? ''));
+        $identifier = trim((string) ($body['email'] ?? $body['identifier'] ?? ''));
         $password = (string) ($body['password'] ?? '');
 
-        $result = $this->service->login($email, $password);
+        $result = $this->service->login($identifier, $password);
         Response::json(['data' => $result]);
     }
 }

@@ -15,9 +15,17 @@ class AuthService
         $this->users = new UserRepository();
     }
 
-    public function login(string $email, string $password): array
+    public function login(string $identifier, string $password): array
     {
-        $user = $this->users->findByEmail($email);
+        $identifier = trim($identifier);
+        $user = null;
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $user = $this->users->findByEmail($identifier);
+        }
+        if (!$user) {
+            $user = $this->users->findByIdentityCode($identifier);
+        }
+
         if (!$user || !$this->verifyPassword($password, $user->password_hash)) {
             throw new HttpException('Credenziali non valide', 401);
         }

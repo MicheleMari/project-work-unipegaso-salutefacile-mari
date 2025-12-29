@@ -25,7 +25,7 @@ class PatientRepository
 
     public function findByCf(string $cf): ?Patient
     {
-        $stmt = $this->pdo->prepare('SELECT * FROM patients WHERE cf = :cf');
+        $stmt = $this->pdo->prepare('SELECT * FROM patients WHERE fiscal_code = :cf');
         $stmt->execute(['cf' => $cf]);
         $row = $stmt->fetch();
         return $row ? $this->map($row) : null;
@@ -34,15 +34,13 @@ class PatientRepository
     public function create(Patient $patient): Patient
     {
         $stmt = $this->pdo->prepare('INSERT INTO patients 
-            (full_name, cf, birth_date, gender, address, city, phone, email) 
-            VALUES (:full_name, :cf, :birth_date, :gender, :address, :city, :phone, :email)');
+            (name, surname, fiscal_code, residence_address, phone, email) 
+            VALUES (:name, :surname, :fiscal_code, :residence_address, :phone, :email)');
         $stmt->execute([
-            'full_name' => $patient->full_name,
-            'cf' => $patient->cf,
-            'birth_date' => $patient->birth_date,
-            'gender' => $patient->gender,
-            'address' => $patient->address,
-            'city' => $patient->city,
+            'name' => $patient->name,
+            'surname' => $patient->surname,
+            'fiscal_code' => $patient->fiscal_code,
+            'residence_address' => $patient->residence_address,
             'phone' => $patient->phone,
             'email' => $patient->email,
         ]);
@@ -53,23 +51,19 @@ class PatientRepository
     public function update(Patient $patient): Patient
     {
         $stmt = $this->pdo->prepare('UPDATE patients SET 
-            full_name = :full_name,
-            cf = :cf,
-            birth_date = :birth_date,
-            gender = :gender,
-            address = :address,
-            city = :city,
+            name = :name,
+            surname = :surname,
+            fiscal_code = :fiscal_code,
+            residence_address = :residence_address,
             phone = :phone,
             email = :email
             WHERE id = :id');
         $stmt->execute([
             'id' => $patient->id,
-            'full_name' => $patient->full_name,
-            'cf' => $patient->cf,
-            'birth_date' => $patient->birth_date,
-            'gender' => $patient->gender,
-            'address' => $patient->address,
-            'city' => $patient->city,
+            'name' => $patient->name,
+            'surname' => $patient->surname,
+            'fiscal_code' => $patient->fiscal_code,
+            'residence_address' => $patient->residence_address,
             'phone' => $patient->phone,
             'email' => $patient->email,
         ]);
@@ -79,6 +73,7 @@ class PatientRepository
     private function map(array $row): Patient
     {
         $row['id'] = (int) ($row['id'] ?? 0);
+        $row['fiscal_code'] = $row['fiscal_code'] ?? ($row['cf'] ?? null);
         return new Patient($row);
     }
 }

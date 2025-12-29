@@ -56,6 +56,8 @@ class EncounterService
         [$patient, $encounter] = $this->buildEntities($data, true);
         $patient = $this->persistPatient($patient);
         $encounter->patient_id = $patient->id;
+        // Emergency.user_id è NOT NULL: fallback all'utente corrente o all'operatore di seed (id=1)
+        $encounter->doctor_id = $encounter->doctor_id ?: ($user['id'] ?? 1);
         $created = $this->encounters->create($encounter);
         $created->patient = $patient;
         return $created->toArray();
@@ -126,7 +128,7 @@ class EncounterService
             return $this->patients->update($patient);
         }
 
-        $existing = $this->patients->findByCf($patient->cf);
+        $existing = $this->patients->findByCf($patient->fiscal_code);
         if ($existing) {
             return $existing;
         }
@@ -170,7 +172,9 @@ class EncounterService
 
     private function validatePatient(array $data, bool $isCreate): array
     {
-        $required = ['full_name', 'cf'];
+        $data['fiscal_code'] = $data['fiscal_code'] ?? $data['cf'] ?? null;
+
+        $required = ['name', 'surname', 'fiscal_code'];
         foreach ($required as $field) {
             if ($isCreate && empty($data[$field])) {
                 throw new HttpException("Missing patient field: {$field}", 422);
@@ -178,22 +182,28 @@ class EncounterService
         }
 
         $clean = [];
-        $clean['full_name'] = $this->sanitizeText($data['full_name'] ?? '', 120);
-        if (!preg_match('/^[A-Za-zÀ-ÿ\s\.\'\-]{2,120}$/u', $clean['full_name'])) {
-            throw new HttpException('Invalid patient full name', 422);
+        $inputFullName = $data['full_name'] ?? null;
+        if (!empty($inputFullName) && (empty($data['name']) || empty($data['surname']))) {
+            $parts = array_values(array_filter(explode(' ', $inputFullName)));
+            $data['name'] = $data['name'] ?? ($parts[0] ?? '');
+            $data['surname'] = $data['surname'] ?? (count($parts) > 1 ? implode(' ', array_slice($parts, 1)) : '');
         }
 
-        $clean['cf'] = strtoupper($this->sanitizeText($data['cf'] ?? '', 16));
-        if (!preg_match('/^[A-Z0-9]{11,16}$/', $clean['cf'])) {
+        $clean['name'] = $this->sanitizeText($data['name'] ?? '', 60);
+        $clean['surname'] = $this->sanitizeText($data['surname'] ?? '', 60);
+        if (!preg_match('/^[A-Za-zÀ-ÿ\s\.\'\-]{2,60}$/u', $clean['name'] ?? '') ||
+            !preg_match('/^[A-Za-zÀ-ÿ\s\.\'\-]{2,60}$/u', $clean['surname'] ?? '')) {
+            throw new HttpException('Invalid patient name or surname', 422);
+        }
+
+        $clean['fiscal_code'] = strtoupper($this->sanitizeText($data['fiscal_code'] ?? '', 16));
+        if (!preg_match('/^[A-Z0-9]{11,16}$/', $clean['fiscal_code'])) {
             throw new HttpException('Invalid codice fiscale format', 422);
         }
 
-        $clean['birth_date'] = $this->sanitizeDate($data['birth_date'] ?? null, false);
-        $clean['gender'] = $this->sanitizeEnum($data['gender'] ?? null, ['M', 'F']);
-        $clean['address'] = $this->sanitizeText($data['address'] ?? null, 200, true);
-        $clean['city'] = $this->sanitizeText($data['city'] ?? null, 120, true);
         $clean['phone'] = $this->sanitizePhone($data['phone'] ?? null);
         $clean['email'] = $this->sanitizeEmail($data['email'] ?? null);
+        $clean['residence_address'] = $this->sanitizeText($data['residence_address'] ?? null, 255, true);
 
         return $clean;
     }
@@ -204,8 +214,18 @@ class EncounterService
             $data['arrival_at'] = date(DATE_ATOM);
         }
 
-        $states = ['Registrato', 'In Attesa Visita', 'In Visita', 'Attesa Esiti', 'OBI', 'Refertato', 'Dimesso', 'Ricoverato'];
-        $priorities = ['red', 'orange', 'green', 'white'];
+        $states = [
+            'Registrato',
+            'Accertamenti Richiesti',
+            'Richiamo Visita Specialistica',
+            'Attesa Referto Specialistico',
+            'Valutazione Ulteriori Visite',
+            'Refertato',
+            'Dimesso',
+            'Ricoverato',
+            'triage'
+        ];
+        $priorities = ['red', 'orange', 'green', 'white', 'rosso', 'arancio', 'giallo', 'bianco'];
 
         $clean = [];
         $clean['arrival_at'] = $this->sanitizeDateTime($data['arrival_at'] ?? date(DATE_ATOM));

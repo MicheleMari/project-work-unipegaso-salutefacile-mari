@@ -27,10 +27,23 @@ function request(path, options = {}) {
 function normalizePayload(payload = {}) {
     // Accetta payload legacy (paziente_nome, cf, data_visita, stato, priorita, parametri, dottore, indirizzo, citta, telefono, email)
     // e lo adatta al nuovo contratto { patient: {...}, encounter: {...} }
+    const fullName = payload.paziente_nome ?? payload.full_name ?? '';
+    let name = payload.name ?? '';
+    let surname = payload.surname ?? '';
+    if ((!name || !surname) && fullName) {
+        const parts = fullName.trim().split(/\s+/);
+        name = name || parts.shift() || '';
+        surname = surname || parts.join(' ');
+    }
+
     const patient = {
-        full_name: payload.paziente_nome ?? payload.full_name ?? '',
-        cf: payload.cf ?? payload.codice_fiscale ?? '',
-        address: payload.indirizzo ?? payload.address ?? null,
+        name,
+        surname,
+        full_name: `${name} ${surname}`.trim(),
+        cf: payload.cf ?? payload.codice_fiscale ?? payload.fiscal_code ?? '',
+        fiscal_code: payload.cf ?? payload.codice_fiscale ?? payload.fiscal_code ?? '',
+        address: payload.indirizzo ?? payload.address ?? payload.residence_address ?? null,
+        residence_address: payload.indirizzo ?? payload.address ?? payload.residence_address ?? null,
         city: payload.citta ?? payload.city ?? null,
         phone: payload.telefono ?? payload.phone ?? null,
         email: payload.email ?? payload.mail ?? null,
@@ -40,7 +53,7 @@ function normalizePayload(payload = {}) {
         arrival_at: payload.data_visita ?? payload.arrival_at ?? new Date().toISOString(),
         state: payload.stato ?? payload.state ?? 'Registrato',
         priority: payload.priorita ?? payload.priority ?? 'green',
-        symptoms: payload.parametri ?? payload.symptoms ?? null,
+        symptoms: payload.parametri ?? payload.symptoms ?? payload.reason ?? null,
         notes: payload.notes ?? null,
     };
 

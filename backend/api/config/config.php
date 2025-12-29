@@ -7,17 +7,7 @@ return [
     ],
     'auth' => [
         'enabled' => true,
-        // Modalità di autenticazione (oidc | static solo per dev)
-        'mode' => getenv('AUTH_MODE') ?: 'static',
-        // Parametri OIDC/JWT
-        'oidc' => [
-            'issuer' => getenv('OIDC_ISSUER') ?: 'http://127.0.0.1:8080',
-            'audience' => getenv('OIDC_AUDIENCE') ?: 'salutefacile-api',
-            'jwks_uri' => getenv('OIDC_JWKS_URI') ?: 'http://127.0.0.1:8080/.well-known/jwks.json',
-            'roles_claim' => getenv('OIDC_ROLES_CLAIM') ?: 'roles',
-            'cache_ttl' => 3600,
-        ],
-        // Token statici solo per sviluppo locale
+        // Token statici (sviluppo e demo)
         'tokens' => [
             'dev-admin-token' => ['role' => 'admin', 'name' => 'Dev Admin', 'id' => 1, 'department' => 'Direzione'],
             'dev-operatore-token' => ['role' => 'operatore', 'name' => 'Dev Operatore', 'id' => 2, 'department' => 'PS'],
@@ -35,7 +25,7 @@ return [
         'appointments' => __DIR__ . '/../storage/appointments.json',
     ],
     'database' => [
-        'dsn' => getenv('DB_DSN') ?: 'mysql:host=127.0.0.1;port=3306;dbname=saluteFacile;charset=utf8mb4',
+        'dsn' => getenv('DB_DSN') ?: 'mysql:host=127.0.0.1;port=3306;dbname=salutefacile;charset=utf8mb4',
         'user' => getenv('DB_USER') ?: 'root',
         'password' => getenv('DB_PASSWORD') ?: 'root',
         'options' => [

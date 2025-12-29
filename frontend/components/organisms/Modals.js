@@ -172,8 +172,44 @@ export const modals = () => `
                 closeModalId: 'booking-modal'
             })}
             <form id="booking-form" data-role="booking-form" class="p-6 space-y-5 overflow-y-auto bg-white rounded-b-xl">
-                <div class="space-y-1"><label class="block text-sm font-medium text-slate-700">Nominativo</label><input type="text" id="p_name" required class="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="space-y-1"><label class="block text-sm font-medium text-slate-700">Nome</label><input type="text" id="p_name" required class="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"></div>
+                    <div class="space-y-1"><label class="block text-sm font-medium text-slate-700">Cognome</label><input type="text" id="p_surname" required class="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"></div>
+                </div>
                 <div class="space-y-1"><label class="block text-sm font-medium text-slate-700">Codice Fiscale</label><input type="text" id="p_cf" class="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none font-mono uppercase"></div>
+                <div>
+                    <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Codice Priorità</h4>
+                    <div class="grid grid-cols-2 gap-3">
+                        <label class="cursor-pointer block relative group">
+                            <input type="radio" name="booking_priority" value="red" class="peer sr-only">
+                            <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-red-600 peer-checked:bg-red-50 peer-checked:shadow-md peer-checked:scale-[1.02]">
+                                <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i data-lucide="siren" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-slate-800">Rosso <span class="text-xs font-normal text-slate-500 block">Emergenza</span></span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block relative group">
+                            <input type="radio" name="booking_priority" value="orange" class="peer sr-only">
+                            <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:shadow-md peer-checked:scale-[1.02]">
+                                <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i data-lucide="flame" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-slate-800">Arancione <span class="text-xs font-normal text-slate-500 block">Indifferibile</span></span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block relative group">
+                            <input type="radio" name="booking_priority" value="green" class="peer sr-only" checked>
+                            <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-green-600 peer-checked:bg-green-50 peer-checked:shadow-md peer-checked:scale-[1.02]">
+                                <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i data-lucide="check-circle" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-slate-800">Verde <span class="text-xs font-normal text-slate-500 block">Urgenza Minore</span></span>
+                            </div>
+                        </label>
+                        <label class="cursor-pointer block relative group">
+                            <input type="radio" name="booking_priority" value="white" class="peer sr-only">
+                            <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-slate-400 peer-checked:bg-slate-100 peer-checked:shadow-md peer-checked:scale-[1.02]">
+                                <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4"></i></div>
+                                <span class="font-bold text-slate-800">Bianco <span class="text-xs font-normal text-slate-500 block">Non Urgente</span></span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
                 <div class="space-y-1"><label class="block text-sm font-medium text-slate-700">Motivo Accesso (Sintomi)</label><textarea id="p_reason" rows="2" class="block w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-medical-500 outline-none"></textarea></div>
                 <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
                     <button type="button" data-action="close-modal" data-modal="booking-modal" class="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium">Annulla</button>
@@ -187,7 +223,7 @@ export const modals = () => `
     <div id="triage-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none no-print">
         <div class="pointer-events-auto bg-white rounded-xl w-full max-w-2xl border border-slate-200 flex flex-col max-h-[90vh] transform scale-95 transition-all">
             ${modalHeader({
-                title: 'Valutazione Triage',
+                title: 'Accertamenti Preventivi',
                 subtitle: 'Paziente: <span id=\"triage-patient-name\" class=\"text-white font-medium sensitive-data\">--</span>',
                 containerClass: 'bg-slate-800 p-6 flex justify-between items-center shrink-0 rounded-t-xl text-white',
                 subtitleClass: 'text-slate-400 text-sm',
@@ -196,44 +232,7 @@ export const modals = () => `
             })}
             <form id="triage-form" data-role="triage-form" class="p-6 space-y-6 overflow-y-auto bg-white rounded-b-xl">
                 <input type="hidden" id="triage_id">
-                <div><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Parametri Vitali</h4><div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="space-y-1"><label class="text-xs font-medium text-slate-600">PA</label><input type="text" id="v_pa" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-center font-mono font-bold" placeholder="120/80"></div>
-                    <div class="space-y-1"><label class="text-xs font-medium text-slate-600">FC</label><input type="number" id="v_fc" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-center font-mono font-bold" placeholder="75"></div>
-                    <div class="space-y-1"><label class="text-xs font-medium text-slate-600">SpO2</label><input type="number" id="v_spo2" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-center font-mono font-bold" placeholder="98"></div>
-                    <div class="space-y-1"><label class="text-xs font-medium text-slate-600">TC</label><input type="number" step="0.1" id="v_tc" class="w-full bg-slate-50 border border-slate-200 rounded p-2 text-center font-mono font-bold" placeholder="36.5"></div>
-                </div></div>
                 
-                <div><h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Codice Priorità</h4><div class="grid grid-cols-2 gap-3">
-                    <label class="cursor-pointer block relative group">
-                        <input type="radio" name="triage_code" value="red" class="peer sr-only">
-                        <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-red-600 peer-checked:bg-red-50 peer-checked:shadow-md peer-checked:scale-[1.02]">
-                            <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center"><i data-lucide="siren" class="w-4 h-4"></i></div>
-                            <span class="font-bold text-slate-800">Rosso <span class="text-xs font-normal text-slate-500 block">Emergenza</span></span>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer block relative group">
-                        <input type="radio" name="triage_code" value="orange" class="peer sr-only">
-                        <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-orange-500 peer-checked:bg-orange-50 peer-checked:shadow-md peer-checked:scale-[1.02]">
-                            <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center"><i data-lucide="flame" class="w-4 h-4"></i></div>
-                            <span class="font-bold text-slate-800">Arancione <span class="text-xs font-normal text-slate-500 block">Indifferibile</span></span>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer block relative group">
-                        <input type="radio" name="triage_code" value="green" class="peer sr-only" checked>
-                        <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-green-600 peer-checked:bg-green-50 peer-checked:shadow-md peer-checked:scale-[1.02]">
-                            <div class="w-8 h-8 rounded-full bg-green-100 text-green-600 flex items-center justify-center"><i data-lucide="check-circle" class="w-4 h-4"></i></div>
-                            <span class="font-bold text-slate-800">Verde <span class="text-xs font-normal text-slate-500 block">Urgenza Minore</span></span>
-                        </div>
-                    </label>
-                    <label class="cursor-pointer block relative group">
-                        <input type="radio" name="triage_code" value="white" class="peer sr-only">
-                        <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-slate-400 peer-checked:bg-slate-100 peer-checked:shadow-md peer-checked:scale-[1.02]">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center"><i data-lucide="user" class="w-4 h-4"></i></div>
-                            <span class="font-bold text-slate-800">Bianco <span class="text-xs font-normal text-slate-500 block">Non Urgente</span></span>
-                        </div>
-                    </label>
-                </div></div>
-
                 <div>
                     <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Primi Accertamenti</h4>
                     <div class="relative mb-3">
@@ -355,8 +354,8 @@ export const modals = () => `
                 <div class="bg-slate-50 p-6 border-t border-slate-200 mt-auto flex flex-col sm:flex-row justify-between items-center gap-4">
                     <div class="w-full sm:w-1/2"><label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Medico</label><div class="relative"><i data-lucide="pen-tool" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i><input type="text" id="nr_signature" readonly class="bg-white border border-slate-200 text-slate-800 text-sm rounded-lg block w-full pl-10 p-2.5 font-serif italic font-bold"></div></div>
                     <div class="flex gap-2 w-full sm:w-auto">
-                        <button type="button" data-action="update-status" data-status="Attesa Esiti" class="bg-indigo-100 hover:bg-indigo-200 text-indigo-700 px-4 py-2.5 rounded-lg text-sm font-bold border border-indigo-200">Attesa Esiti</button>
-                        <button type="button" data-action="update-status" data-status="OBI" class="bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 px-4 py-2.5 rounded-lg text-sm font-bold border border-fuchsia-200">Trasferisci OBI</button>
+                        <button type="button" data-action="update-status" data-status="Attesa Referto Specialistico" class="bg-amber-100 hover:bg-amber-200 text-amber-700 px-4 py-2.5 rounded-lg text-sm font-bold border border-amber-200">Attesa Referto Spec.</button>
+                        <button type="button" data-action="update-status" data-status="Valutazione Ulteriori Visite" class="bg-fuchsia-100 hover:bg-fuchsia-200 text-fuchsia-700 px-4 py-2.5 rounded-lg text-sm font-bold border border-fuchsia-200">Valutare altre visite</button>
                         <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg flex items-center gap-2"><i data-lucide="save" class="w-4 h-4"></i> Chiudi Referto</button>
                     </div>
                 </div>

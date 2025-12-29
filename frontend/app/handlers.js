@@ -54,9 +54,10 @@ function applyRoleUiRules() {
 
     if (role === 'dottore') {
         const filters = document.querySelectorAll('#filter-container [data-filter]');
+        const allowed = ['all', 'Accertamenti Richiesti', 'Richiamo Visita Specialistica', 'Attesa Referto Specialistico', 'Valutazione Ulteriori Visite', 'Ricoverato', 'Refertato'];
         filters.forEach((f) => {
             const val = f.dataset.filter;
-            if (!['In Visita', 'Attesa Esiti', 'Ricoverato', 'Refertato'].includes(val)) {
+            if (!allowed.includes(val)) {
                 f.classList.add('hidden');
             }
         });
@@ -539,13 +540,30 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
         function sortTable(c) { const direction = (state.currentSort.column === c && state.currentSort.direction === 'asc') ? 'desc' : 'asc'; setSort(c, direction); renderTable(); }
         function handleSearch() { renderTable(); }
         
-        function openBookingModal() { document.getElementById('booking-form').reset(); toggleModal('booking-modal', true); }
+        function openBookingModal() { 
+            const form = document.getElementById('booking-form');
+            if (form) form.reset(); 
+            const defaultPriority = document.querySelector('input[name="booking_priority"][value="green"]');
+            if (defaultPriority) defaultPriority.checked = true;
+            toggleModal('booking-modal', true); 
+        }
         async function handleBooking(e) { 
             e.preventDefault(); 
             if (!state.permissions.canCreate) { showToast('Non puoi creare nuovi accessi'); return; }
             const form = e.currentTarget; 
             if (!validateBookingForm(form)) return; 
-            const payload = { paziente_nome: document.getElementById('p_name').value, cf: document.getElementById('p_cf').value, stato: 'Registrato', data_visita: new Date().toISOString() };
+            const name = document.getElementById('p_name').value;
+            const surname = document.getElementById('p_surname').value;
+            const payload = { 
+                paziente_nome: `${name} ${surname}`.trim(),
+                name,
+                surname,
+                cf: document.getElementById('p_cf').value, 
+                priorita: document.querySelector('input[name="booking_priority"]:checked')?.value || 'green',
+                stato: 'Registrato', 
+                data_visita: new Date().toISOString(),
+                parametri: document.getElementById('p_reason').value || null
+            };
             try {
                 const saved = await createAppointmentApi(payload);
                 addAppointment(saved);
@@ -566,7 +584,10 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             const form = e.currentTarget; 
             if (!validateTriageForm(form)) return; 
             const id=parseInt(document.getElementById('triage_id').value); 
-            const payload = { stato: 'In Attesa Visita', priorita: document.querySelector('input[name=\"triage_code\"]:checked')?.value || 'green', parametri: `PA:${document.getElementById('v_pa').value} FC:${document.getElementById('v_fc').value}` };
+            const exams = [...form.querySelectorAll('input[name=\"exams\"]:checked')].map((el) => el.value).join(', ') || 'Nessuno';
+            const vitals = `PA:${document.getElementById('v_pa').value} FC:${document.getElementById('v_fc').value} SpO2:${document.getElementById('v_spo2').value} TC:${document.getElementById('v_tc').value}`;
+            const existing = state.appointments.find(x => x.id === id);
+            const payload = { stato: 'Accertamenti Richiesti', priorita: existing?.priorita || 'green', parametri: `${vitals} | Esami: ${exams}` };
             let updated;
             try {
                 const saved = await updateAppointmentApi(id, payload);
@@ -576,7 +597,7 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
                 updated = updateAppointment(id, payload);
                 showToast('Backend non raggiungibile, salvataggio locale');
             }
-            if (updated) { closeModal('triage-modal'); filterTable('all'); showToast('Triage completato'); updateKPIs(); } 
+            if (updated) { closeModal('triage-modal'); filterTable('all'); showToast('Codice assegnato, accertamenti richiesti e parametri registrati'); updateKPIs(); } 
         }
         
         function openPatientDetails(id) {
@@ -664,7 +685,7 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             const id=parseInt(document.getElementById('visit_assign_id').value); 
             const spec=document.getElementById('visit_specialty').value; 
             if(!spec){ alert("Seleziona un reparto"); return; }
-            const payload = { stato:'In Visita', dottore:`Dr. Assegnato (${spec})` };
+            const payload = { stato:'Richiamo Visita Specialistica', dottore:`Dr. Assegnato (${spec})` };
             let updated;
             try {
                 const saved = await updateAppointmentApi(id, payload);
@@ -674,7 +695,7 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
                 updated = updateAppointment(id, payload);
                 showToast('Backend non raggiungibile, salvataggio locale');
             }
-            if(updated){ closeModal('visit-assignment-modal'); renderTable(); showToast(`Paziente assegnato a ${spec}`); }
+            if(updated){ closeModal('visit-assignment-modal'); renderTable(); showToast(`Richiamo visita specialistica: ${spec}`); }
         }
         function openNewReportModal(id) { 
             const a=state.appointments.find(x=>x.id===id); 

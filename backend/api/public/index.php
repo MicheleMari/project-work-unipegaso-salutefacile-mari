@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Core\Autoloader;
 use App\Core\Config;
 use App\Core\Router;
+use App\Controllers\AuthController;
 use App\Controllers\AppointmentController;
 use App\Controllers\EncounterController;
 use App\Controllers\ReferenceController;
@@ -20,10 +21,12 @@ Config::load(__DIR__ . '/../config/config.php');
 set_exception_handler(fn ($e) => Response::error($e));
 
 $router = new Router(Config::get('app.base_path', ''));
+$auth = new AuthController();
 $encounters = new EncounterController();
 $references = new ReferenceController();
 
 $router->get('/health', fn () => Response::json(['status' => 'ok', 'timestamp' => date(DATE_ATOM)]), ['rate_limit' => ['max' => 30]]);
+$router->post('/auth/login', [$auth, 'login'], ['rate_limit' => ['max' => 30]]);
 
 $protected = ['roles' => ['operatore', 'admin', 'dottore']];
 

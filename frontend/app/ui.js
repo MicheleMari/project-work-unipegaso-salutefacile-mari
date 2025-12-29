@@ -100,10 +100,10 @@ export function renderTable() {
         }
 
         let badgeClass = 'bg-slate-100 text-slate-600';
-        if (app.stato === 'In Visita') badgeClass = 'bg-purple-100 text-purple-700 border border-purple-200';
-        else if (app.stato === 'In Attesa Visita') badgeClass = 'bg-amber-100 text-amber-700 border border-amber-200';
-        else if (app.stato === 'Attesa Esiti') badgeClass = 'bg-indigo-100 text-indigo-700 border border-indigo-200';
-        else if (app.stato === 'OBI') badgeClass = 'bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200';
+        if (app.stato === 'Accertamenti Richiesti') badgeClass = 'bg-indigo-100 text-indigo-700 border border-indigo-200';
+        else if (app.stato === 'Richiamo Visita Specialistica') badgeClass = 'bg-purple-100 text-purple-700 border border-purple-200';
+        else if (app.stato === 'Attesa Referto Specialistico') badgeClass = 'bg-amber-100 text-amber-700 border border-amber-200';
+        else if (app.stato === 'Valutazione Ulteriori Visite') badgeClass = 'bg-fuchsia-100 text-fuchsia-700 border border-fuchsia-200';
         else if (app.stato === 'Refertato') badgeClass = 'bg-emerald-100 text-emerald-700 border border-emerald-200';
         else if (app.stato === 'Ricoverato') badgeClass = 'bg-red-100 text-red-800 border border-red-200';
         else if (app.stato === 'Dimesso') badgeClass = 'bg-green-50 text-green-800 border border-green-200';
@@ -115,10 +115,10 @@ export function renderTable() {
         }
 
         let actions = '';
-        if (app.stato === 'Registrato') actions = `<button data-action="open-triage" data-id="${safeId}" class="w-full bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 shadow-sm">Avvia Triage</button>`;
-        else if (app.stato === 'In Attesa Visita') actions = `<button data-action="open-visit" data-id="${safeId}" class="w-full bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-amber-600 shadow-sm">Chiama Visita</button>`;
-        else if (app.stato === 'In Visita') actions = `<button data-action="open-report-editor" data-id="${safeId}" class="w-full bg-purple-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-purple-700 shadow-sm">Gestisci/Referta</button>`;
-        else if (app.stato === 'Attesa Esiti' || app.stato === 'OBI') actions = `<button data-action="open-report-editor" data-id="${safeId}" class="w-full bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-indigo-700 shadow-sm">Concludi</button>`;
+        if (app.stato === 'Registrato') actions = `<button data-action="open-triage" data-id="${safeId}" class="w-full bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 shadow-sm">Accertamenti Preventivi</button>`;
+        else if (app.stato === 'Accertamenti Richiesti') actions = `<button data-action="open-visit" data-id="${safeId}" class="w-full bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-amber-600 shadow-sm">Richiama Specialista</button>`;
+        else if (app.stato === 'Richiamo Visita Specialistica') actions = `<button data-action="open-report-editor" data-id="${safeId}" class="w-full bg-purple-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-purple-700 shadow-sm">Gestisci/Referta</button>`;
+        else if (app.stato === 'Attesa Referto Specialistico' || app.stato === 'Valutazione Ulteriori Visite') actions = `<button data-action="open-report-editor" data-id="${safeId}" class="w-full bg-indigo-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-indigo-700 shadow-sm">Aggiorna Esito</button>`;
         else if (app.stato === 'Refertato') actions = `<div class="flex gap-2"><button data-action="open-outcome" data-id="${safeId}" data-type="dimissione" class="flex-1 bg-green-600 text-white px-2 py-1.5 rounded text-xs font-bold hover:bg-green-700 shadow-sm">Dimetti</button><button data-action="open-outcome" data-id="${safeId}" data-type="ricovero" class="flex-1 bg-red-600 text-white px-2 py-1.5 rounded text-xs font-bold hover:bg-red-700 shadow-sm">Ricovera</button></div>`;
         else actions = `<button data-action="open-report" data-id="${safeId}" class="w-full bg-slate-100 text-slate-600 border border-slate-200 px-3 py-1.5 rounded text-xs font-bold hover:bg-white shadow-sm">Vedi Storico</button>`;
 
@@ -133,7 +133,7 @@ export function renderTable() {
                 <div class="text-xs text-slate-400 font-mono">ID: ${safeId}</div>
             </td>
             <td class="px-6 py-4 align-top">${priorityHtml}<div class="text-xs text-slate-500 mt-1">${safeParams}</div></td>
-            <td class="px-6 py-4 align-top text-sm">${safeDoctor}<br><span class="text-xs text-slate-400 uppercase">Fase: ${safeState.replace('In ', '')}</span></td>
+            <td class="px-6 py-4 align-top text-sm">${safeDoctor}<br><span class="text-xs text-slate-400 uppercase">Fase: ${safeState}</span></td>
             <td class="px-6 py-4 align-top text-xs font-mono text-slate-500">
                 ${new Date(app.data_visita).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 <div class="mt-1">${alertIcon}</div>

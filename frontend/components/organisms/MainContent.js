@@ -7,11 +7,12 @@ export const mainContent = () => {
     const filterChips = [
         { label: 'Tutti', filter: 'all', color: 'slate', className: 'font-medium shadow-sm' },
         { divider: true },
-        { label: 'Accettazione', filter: 'Registrato', color: 'slate', className: 'font-bold uppercase' },
-        { label: 'Attesa Visita', filter: 'In Attesa Visita', color: 'amber', className: 'font-bold uppercase' },
-        { label: 'In Visita', filter: 'In Visita', color: 'purple', className: 'font-bold uppercase' },
-        { label: 'Attesa Esiti', filter: 'Attesa Esiti', color: 'indigo', className: 'font-bold uppercase' },
-        { label: 'O.B.I.', filter: 'OBI', color: 'fuchsia', className: 'font-bold uppercase' },
+        { label: 'Triage (Reg.)', filter: 'Registrato', color: 'slate', className: 'font-bold uppercase' },
+        { label: 'Accertamenti', filter: 'Accertamenti Richiesti', color: 'indigo', className: 'font-bold uppercase' },
+        { label: 'Richiamo Visita Spec.', filter: 'Richiamo Visita Specialistica', color: 'purple', className: 'font-bold uppercase' },
+        { label: 'Attesa Referto Spec.', filter: 'Attesa Referto Specialistico', color: 'amber', className: 'font-bold uppercase' },
+        { label: 'Valutazione Ulteriori Visite', filter: 'Valutazione Ulteriori Visite', color: 'fuchsia', className: 'font-bold uppercase' },
+        { label: 'Refertato', filter: 'Refertato', color: 'green', className: 'font-bold uppercase' },
         { divider: true },
         { label: 'Dimessi', filter: 'Dimesso', color: 'green', className: 'font-bold uppercase' },
         { label: 'Ricoverati', filter: 'Ricoverato', color: 'red', className: 'font-bold uppercase' }
@@ -144,7 +145,7 @@ export const mainContent = () => {
                         <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 select-none">
                             <th data-action="sort-table" data-sort="paziente_nome" class="px-6 py-4 font-semibold cursor-pointer hover:bg-slate-100 transition group">Paziente <span id="sort-icon-paziente_nome"></span></th>
                             <th class="px-6 py-4 font-semibold">Codice & Parametri</th>
-                            <th class="px-6 py-4 font-semibold">Medico/Fase</th>
+                            <th class="px-6 py-4 font-semibold">Specialista</th>
                             <th data-action="sort-table" data-sort="data_visita" class="px-6 py-4 font-semibold cursor-pointer hover:bg-slate-100 transition group">Ingresso <span id="sort-icon-data_visita"></span></th>
                             <th data-action="sort-table" data-sort="stato" class="px-6 py-4 font-semibold text-center cursor-pointer hover:bg-slate-100 transition group">Stato Attuale <span id="sort-icon-stato"></span></th>
                             <th class="px-6 py-4 font-semibold text-right">Azioni</th>

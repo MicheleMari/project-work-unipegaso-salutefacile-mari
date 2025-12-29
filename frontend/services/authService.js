@@ -26,6 +26,23 @@ export function saveSession(token, user) {
     window.USER_CTX = user;
 }
 
+export async function login(email, password) {
+    const API_BASE = window.API_BASE || 'http://127.0.0.1:8000/api';
+    const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+    });
+    if (!res.ok) {
+        const text = await res.text();
+        throw new Error(text || `HTTP ${res.status}`);
+    }
+    const json = await res.json();
+    const data = json.data ?? json;
+    saveSession(data.token, data.user);
+    return { token: data.token, user: data.user, permissions: computePermissions(data.user) };
+}
+
 export function clearSession() {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);

@@ -21,29 +21,27 @@ class EncounterRepository
         $sql = 'SELECT 
                     e.id AS encounter_id,
                     e.patient_id,
-                    e.arrival_at,
-                    e.state,
-                    e.priority,
-                    e.symptoms,
-                    e.doctor_id,
-                    e.notes,
+                    e.status,
+                    e.alert_code,
+                    e.description,
+                    e.vital_signs,
+                    e.user_id AS doctor_id,
                     e.created_at AS encounter_created_at,
                     e.updated_at,
                     p.id AS patient_id,
-                    p.full_name,
-                    p.cf,
-                    p.birth_date,
-                    p.gender,
-                    p.address,
-                    p.city,
+                    p.name,
+                    p.surname,
+                    p.fiscal_code,
+                    p.residence_address,
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
-                    u.name AS doctor_name
-                FROM ps_encounters e
+                    u.name AS doctor_name,
+                    u.surname AS doctor_surname
+                FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
-                LEFT JOIN users u ON u.id = e.doctor_id
-                ORDER BY e.arrival_at DESC, e.id DESC';
+                LEFT JOIN users u ON u.id = e.user_id
+                ORDER BY e.created_at DESC, e.id DESC';
         $rows = $this->pdo->query($sql)->fetchAll() ?: [];
         return array_map(fn ($row) => $this->map($row), $rows);
     }
@@ -53,30 +51,28 @@ class EncounterRepository
         $sql = 'SELECT 
                     e.id AS encounter_id,
                     e.patient_id,
-                    e.arrival_at,
-                    e.state,
-                    e.priority,
-                    e.symptoms,
-                    e.doctor_id,
-                    e.notes,
+                    e.status,
+                    e.alert_code,
+                    e.description,
+                    e.vital_signs,
+                    e.user_id AS doctor_id,
                     e.created_at AS encounter_created_at,
                     e.updated_at,
                     p.id AS patient_id,
-                    p.full_name,
-                    p.cf,
-                    p.birth_date,
-                    p.gender,
-                    p.address,
-                    p.city,
+                    p.name,
+                    p.surname,
+                    p.fiscal_code,
+                    p.residence_address,
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
-                    u.name AS doctor_name
-                FROM ps_encounters e
+                    u.name AS doctor_name,
+                    u.surname AS doctor_surname
+                FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
-                LEFT JOIN users u ON u.id = e.doctor_id
-                WHERE e.doctor_id = :doctor_id
-                ORDER BY e.arrival_at DESC, e.id DESC';
+                LEFT JOIN users u ON u.id = e.user_id
+                WHERE e.user_id = :doctor_id
+                ORDER BY e.created_at DESC, e.id DESC';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['doctor_id' => $doctorId]);
         $rows = $stmt->fetchAll() ?: [];
@@ -88,28 +84,26 @@ class EncounterRepository
         $sql = 'SELECT 
                     e.id AS encounter_id,
                     e.patient_id,
-                    e.arrival_at,
-                    e.state,
-                    e.priority,
-                    e.symptoms,
-                    e.doctor_id,
-                    e.notes,
+                    e.status,
+                    e.alert_code,
+                    e.description,
+                    e.vital_signs,
+                    e.user_id AS doctor_id,
                     e.created_at AS encounter_created_at,
                     e.updated_at,
                     p.id AS patient_id,
-                    p.full_name,
-                    p.cf,
-                    p.birth_date,
-                    p.gender,
-                    p.address,
-                    p.city,
+                    p.name,
+                    p.surname,
+                    p.fiscal_code,
+                    p.residence_address,
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
-                    u.name AS doctor_name
-                FROM ps_encounters e
+                    u.name AS doctor_name,
+                    u.surname AS doctor_surname
+                FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
-                LEFT JOIN users u ON u.id = e.doctor_id
+                LEFT JOIN users u ON u.id = e.user_id
                 WHERE e.id = :id';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -122,29 +116,27 @@ class EncounterRepository
         $sql = 'SELECT 
                     e.id AS encounter_id,
                     e.patient_id,
-                    e.arrival_at,
-                    e.state,
-                    e.priority,
-                    e.symptoms,
-                    e.doctor_id,
-                    e.notes,
+                    e.status,
+                    e.alert_code,
+                    e.description,
+                    e.vital_signs,
+                    e.user_id AS doctor_id,
                     e.created_at AS encounter_created_at,
                     e.updated_at,
                     p.id AS patient_id,
-                    p.full_name,
-                    p.cf,
-                    p.birth_date,
-                    p.gender,
-                    p.address,
-                    p.city,
+                    p.name,
+                    p.surname,
+                    p.fiscal_code,
+                    p.residence_address,
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
-                    u.name AS doctor_name
-                FROM ps_encounters e
+                    u.name AS doctor_name,
+                    u.surname AS doctor_surname
+                FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
-                LEFT JOIN users u ON u.id = e.doctor_id
-                WHERE e.id = :id AND e.doctor_id = :doctor_id';
+                LEFT JOIN users u ON u.id = e.user_id
+                WHERE e.id = :id AND e.user_id = :doctor_id';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id, 'doctor_id' => $doctorId]);
         $row = $stmt->fetch();
@@ -153,17 +145,16 @@ class EncounterRepository
 
     public function create(Encounter $encounter): Encounter
     {
-        $stmt = $this->pdo->prepare('INSERT INTO ps_encounters 
-            (patient_id, arrival_at, state, priority, symptoms, doctor_id, notes)
-            VALUES (:patient_id, :arrival_at, :state, :priority, :symptoms, :doctor_id, :notes)');
+        $stmt = $this->pdo->prepare('INSERT INTO emergency 
+            (patient_id, status, alert_code, description, vital_signs, user_id)
+            VALUES (:patient_id, :status, :alert_code, :description, :vital_signs, :user_id)');
         $stmt->execute([
             'patient_id' => $encounter->patient_id,
-            'arrival_at' => $this->toMysqlDate($encounter->arrival_at),
-            'state' => $encounter->state,
-            'priority' => $encounter->priority,
-            'symptoms' => $encounter->symptoms,
-            'doctor_id' => $encounter->doctor_id,
-            'notes' => $encounter->notes,
+            'status' => $encounter->state,
+            'alert_code' => $this->priorityToDb($encounter->priority),
+            'description' => $encounter->symptoms,
+            'vital_signs' => $encounter->notes ? json_encode(['notes' => $encounter->notes]) : null,
+            'user_id' => $encounter->doctor_id,
         ]);
         $encounter->id = (int) $this->pdo->lastInsertId();
         return $encounter;
@@ -171,55 +162,57 @@ class EncounterRepository
 
     public function update(Encounter $encounter): Encounter
     {
-        $stmt = $this->pdo->prepare('UPDATE ps_encounters SET
-            arrival_at = :arrival_at,
-            state = :state,
-            priority = :priority,
-            symptoms = :symptoms,
-            doctor_id = :doctor_id,
-            notes = :notes
+        $stmt = $this->pdo->prepare('UPDATE emergency SET
+            status = :status,
+            alert_code = :alert_code,
+            description = :description,
+            vital_signs = :vital_signs,
+            user_id = :user_id
             WHERE id = :id');
         $stmt->execute([
             'id' => $encounter->id,
-            'arrival_at' => $this->toMysqlDate($encounter->arrival_at),
-            'state' => $encounter->state,
-            'priority' => $encounter->priority,
-            'symptoms' => $encounter->symptoms,
-            'doctor_id' => $encounter->doctor_id,
-            'notes' => $encounter->notes,
+            'status' => $encounter->state,
+            'alert_code' => $this->priorityToDb($encounter->priority),
+            'description' => $encounter->symptoms,
+            'vital_signs' => $encounter->notes ? json_encode(['notes' => $encounter->notes]) : null,
+            'user_id' => $encounter->doctor_id,
         ]);
         return $encounter;
     }
 
     public function delete(int $id): bool
     {
-        $stmt = $this->pdo->prepare('DELETE FROM ps_encounters WHERE id = :id');
+        $stmt = $this->pdo->prepare('DELETE FROM emergency WHERE id = :id');
         $stmt->execute(['id' => $id]);
         return (bool) $stmt->rowCount();
     }
 
     private function map(array $row): Encounter
     {
+        $vitalSigns = $row['vital_signs'] ?? null;
+        if (is_string($vitalSigns)) {
+            $vitalSigns = json_decode($vitalSigns, true);
+        }
+        $notes = is_array($vitalSigns) ? ($vitalSigns['notes'] ?? null) : null;
+
         $encounterData = [
             'id' => (int) $row['encounter_id'],
             'patient_id' => (int) $row['patient_id'],
-            'arrival_at' => $this->toIsoDate($row['arrival_at'] ?? null),
-            'state' => $row['state'],
-            'priority' => $row['priority'],
-            'symptoms' => $row['symptoms'] ?? null,
+            'arrival_at' => $this->toIsoDate($row['encounter_created_at'] ?? null),
+            'state' => $row['status'],
+            'priority' => $this->priorityFromDb($row['alert_code'] ?? null),
+            'symptoms' => $row['description'] ?? null,
             'doctor_id' => isset($row['doctor_id']) ? (int) $row['doctor_id'] : null,
-            'doctor_name' => $row['doctor_name'] ?? null,
-            'notes' => $row['notes'] ?? null,
+            'doctor_name' => trim(($row['doctor_name'] ?? '') . ' ' . ($row['doctor_surname'] ?? '')) ?: null,
+            'notes' => $notes,
             'created_at' => $this->toIsoDate($row['encounter_created_at'] ?? null),
             'updated_at' => $this->toIsoDate($row['updated_at'] ?? null),
             'patient' => new Patient([
                 'id' => (int) $row['patient_id'],
-                'full_name' => $row['full_name'],
-                'cf' => $row['cf'],
-                'birth_date' => $row['birth_date'] ?? null,
-                'gender' => $row['gender'] ?? null,
-                'address' => $row['address'] ?? null,
-                'city' => $row['city'] ?? null,
+                'name' => $row['name'],
+                'surname' => $row['surname'],
+                'fiscal_code' => $row['fiscal_code'],
+                'residence_address' => $row['residence_address'] ?? null,
                 'phone' => $row['phone'] ?? null,
                 'email' => $row['email'] ?? null,
                 'created_at' => $this->toIsoDate($row['patient_created_at'] ?? null),
@@ -245,5 +238,27 @@ class EncounterRepository
         }
         $ts = strtotime($value);
         return $ts ? date('Y-m-d H:i:s', $ts) : null;
+    }
+
+    private function priorityToDb(?string $priority): ?string
+    {
+        return match ($priority) {
+            'red', 'rosso' => 'rosso',
+            'orange', 'arancio' => 'arancio',
+            'white', 'bianco' => 'bianco',
+            'green', 'giallo', 'verde' => 'giallo', // schema supports giallo, map verde to giallo
+            default => null,
+        };
+    }
+
+    private function priorityFromDb(?string $alert): string
+    {
+        return match ($alert) {
+            'rosso' => 'red',
+            'arancio' => 'orange',
+            'bianco' => 'white',
+            'giallo' => 'green',
+            default => 'green',
+        };
     }
 }

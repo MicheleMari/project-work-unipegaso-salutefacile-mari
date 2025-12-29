@@ -22,7 +22,7 @@ const runtimeButtonClasses = [
     "font-semibold"
 ];
 
-tailwind.config = {
+const config = {
     safelist: [
         ...safeListClasses,
         ...runtimeButtonClasses,
@@ -45,4 +45,12 @@ tailwind.config = {
             animation: { 'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite' }
         }
     }
+};
+
+// Compatibilità: se caricato via CDN (window.tailwind) o via Node (module.exports)
+if (typeof tailwind !== 'undefined') {
+    tailwind.config = config;
+}
+if (typeof module !== 'undefined') {
+    module.exports = config;
 }

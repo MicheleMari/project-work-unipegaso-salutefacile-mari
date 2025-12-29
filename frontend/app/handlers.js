@@ -262,6 +262,9 @@ function handleActionClick(event) {
         case 'print-report':
             window.print();
             break;
+        case 'show-assignment':
+            showAssignment(parseInt(target.dataset.id, 10));
+            break;
         case 'trigger-file-upload': {
             const input = document.getElementById('file-upload');
             if (input) input.click();
@@ -601,7 +604,8 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
         }
         
         function openPatientDetails(id) {
-            const a = state.appointments.find(x => x.id === id); if (!a) return; state.isEditingPatient = true; toggleEditPatient(); 
+            const a = state.appointments.find(x => x.id === id); if (!a) return; 
+            state.isEditingPatient = true; toggleEditPatient({ silent: true }); 
             document.getElementById('pd-name').value = a.paziente_nome; document.getElementById('pd-id').innerText = `ID: ${a.id}`; document.getElementById('pd-cf').value = a.cf;
             const initials = a.paziente_nome.split(' ').map(n => n[0]).join('').substring(0,2).toUpperCase(); document.getElementById('pd-avatar').innerText = initials;
             const parsedData = parseCF(a.cf, state.cityMap);
@@ -610,11 +614,11 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             document.getElementById('pd-address').value = a.indirizzo || "Non Specificato"; document.getElementById('pd-city').value = a.citta || "Non Specificato"; document.getElementById('pd-phone').value = a.telefono || "Non Specificato"; document.getElementById('pd-email').value = a.email || "Non Specificato";
             toggleModal('patient-details-modal', true); lucide.createIcons();
         }
-        function toggleEditPatient() {
+        function toggleEditPatient({ silent = false } = {}) {
             state.isEditingPatient = !state.isEditingPatient; const inputs = document.querySelectorAll('#patient-details-modal input'); const customSelects = document.querySelectorAll('#patient-details-modal .custom-select-container'); const icon = document.getElementById('pd-edit-icon'); const saveBtn = document.getElementById('pd-save-btn');
             inputs.forEach(input => { if (state.isEditingPatient) { input.removeAttribute('readonly'); input.classList.remove('bg-transparent', 'border-transparent'); input.classList.add('bg-slate-50', 'border-slate-200'); } else { input.setAttribute('readonly', 'true'); input.classList.add('bg-transparent', 'border-transparent'); input.classList.remove('bg-slate-50', 'border-slate-200'); } });
             customSelects.forEach(sel => { const trigger = sel.querySelector('.custom-select-trigger'); if (state.isEditingPatient) { sel.classList.remove('disabled'); trigger.classList.remove('bg-transparent', 'border-transparent'); trigger.classList.add('bg-slate-50', 'border-slate-200'); } else { sel.classList.add('disabled'); trigger.classList.add('bg-transparent', 'border-transparent'); trigger.classList.remove('bg-slate-50', 'border-slate-200'); } });
-            if (state.isEditingPatient) { icon.setAttribute('data-lucide', 'save'); icon.parentElement.classList.add('text-green-400'); icon.parentElement.classList.remove('text-slate-300'); saveBtn.classList.remove('hidden'); } else { icon.setAttribute('data-lucide', 'pen-line'); icon.parentElement.classList.remove('text-green-400'); icon.parentElement.classList.add('text-slate-300'); saveBtn.classList.add('hidden'); showToast("Dati anagrafici aggiornati"); } lucide.createIcons();
+            if (state.isEditingPatient) { icon.setAttribute('data-lucide', 'save'); icon.parentElement.classList.add('text-green-400'); icon.parentElement.classList.remove('text-slate-300'); saveBtn.classList.remove('hidden'); } else { icon.setAttribute('data-lucide', 'pen-line'); icon.parentElement.classList.remove('text-green-400'); icon.parentElement.classList.add('text-slate-300'); saveBtn.classList.add('hidden'); if (!silent) { showToast("Dati anagrafici aggiornati"); } } lucide.createIcons();
         }
 
         async function savePatientDetails() {
@@ -796,6 +800,16 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
         function toggleModal(id, show) { const m=document.getElementById(id); const b=document.getElementById('modal-backdrop'); if(show){ b.classList.remove('hidden'); m.classList.remove('hidden'); setTimeout(()=>{b.classList.remove('opacity-0'); m.querySelector('div').classList.add('scale-100');},10); } else { b.classList.add('opacity-0'); m.querySelector('div').classList.remove('scale-100'); setTimeout(()=>{m.classList.add('hidden'); b.classList.add('hidden');},300); } }
         function closeModal(id) { toggleModal(id, false); }
         function showToast(m) { const t=document.createElement('div'); t.className="bg-slate-800 text-white px-4 py-2 rounded fixed bottom-4 right-4 z-50 shadow"; t.innerText=m; document.body.appendChild(t); setTimeout(()=>t.remove(),3000); }
+        function showAssignment(id) {
+            const a = state.appointments.find(x => x.id === id);
+            if (!a) return;
+            if (a.doctor_department) {
+                showToast(`Specialista: ${a.dottore || 'N/D'} (${a.doctor_department})`);
+            } else {
+                const operator = a.dottore || state.user?.name || 'Operatore PS';
+                showToast(`Pronto Soccorso: ${operator}`);
+            }
+        }
         
         async function confirmOutcome() {
             let payload = { stato: 'Dimesso' };

@@ -20,3 +20,12 @@
 {"ts":"2025-12-29T13:25:22+00:00","status":401,"method":"POST","path":"\/api\/auth\/login","ip":"127.0.0.1","user":[],"context":null}
 {"ts":"2025-12-29T13:26:15+00:00","status":401,"method":"POST","path":"\/api\/auth\/login","ip":"127.0.0.1","user":[],"context":null}
 {"ts":"2025-12-29T15:24:02+00:00","status":401,"method":"POST","path":"\/api\/auth\/login","ip":"127.0.0.1","user":[],"context":null}
+{"ts":"2025-12-29T15:54:09+00:00","status":200,"method":"POST","path":"\/api\/auth\/login","ip":"127.0.0.1","user":[],"context":null}
+{"ts":"2025-12-29T15:54:10+00:00","status":200,"method":"GET","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T15:54:29+00:00","status":200,"method":"GET","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T15:55:13+00:00","status":201,"method":"POST","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T16:00:53+00:00","status":200,"method":"GET","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T16:03:03+00:00","status":200,"method":"GET","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T16:07:22+00:00","status":200,"method":"GET","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T16:07:39+00:00","status":200,"method":"PATCH","path":"\/api\/ps\/encounters\/1","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}
+{"ts":"2025-12-29T16:07:39+00:00","status":200,"method":"GET","path":"\/api\/ps\/encounters","ip":"127.0.0.1","user":{"id":1,"role":"operatore","name":"Luca Rossi","department":null,"sub":"OPS001","claims":{"mode":"db-token"}},"context":null}

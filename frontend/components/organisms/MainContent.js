@@ -145,7 +145,7 @@ export const mainContent = () => {
                         <tr class="bg-slate-50 border-b border-slate-200 text-xs uppercase tracking-wider text-slate-500 select-none">
                             <th data-action="sort-table" data-sort="paziente_nome" class="px-6 py-4 font-semibold cursor-pointer hover:bg-slate-100 transition group">Paziente <span id="sort-icon-paziente_nome"></span></th>
                             <th class="px-6 py-4 font-semibold">Codice & Parametri</th>
-                            <th class="px-6 py-4 font-semibold">Specialista</th>
+                            <th class="px-6 py-4 font-semibold">Assegnato a</th>
                             <th data-action="sort-table" data-sort="data_visita" class="px-6 py-4 font-semibold cursor-pointer hover:bg-slate-100 transition group">Ingresso <span id="sort-icon-data_visita"></span></th>
                             <th data-action="sort-table" data-sort="stato" class="px-6 py-4 font-semibold text-center cursor-pointer hover:bg-slate-100 transition group">Stato Attuale <span id="sort-icon-stato"></span></th>
                             <th class="px-6 py-4 font-semibold text-right">Azioni</th>

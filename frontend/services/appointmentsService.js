@@ -70,6 +70,8 @@ function toLegacy(encounter = {}) {
         stato: encounter.state || 'Registrato',
         data_visita: encounter.arrival_at || new Date().toISOString(),
         dottore: encounter.doctor_name || '-',
+        doctor_id: encounter.doctor_id || null,
+        doctor_department: encounter.doctor_department || null,
         parametri: encounter.symptoms || '-',
         indirizzo: patient.address || null,
         citta: patient.city || null,

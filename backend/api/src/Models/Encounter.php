@@ -12,6 +12,7 @@ class Encounter
     public ?string $symptoms;
     public ?int $doctor_id;
     public ?string $doctor_name;
+    public ?string $doctor_department;
     public ?string $notes;
     public ?string $created_at;
     public ?string $updated_at;
@@ -27,6 +28,7 @@ class Encounter
         $this->symptoms = $data['symptoms'] ?? null;
         $this->doctor_id = isset($data['doctor_id']) ? (int) $data['doctor_id'] : null;
         $this->doctor_name = $data['doctor_name'] ?? null;
+        $this->doctor_department = $data['doctor_department'] ?? null;
         $this->notes = $data['notes'] ?? null;
         $this->created_at = $data['created_at'] ?? null;
         $this->updated_at = $data['updated_at'] ?? null;
@@ -46,6 +48,7 @@ class Encounter
             'symptoms' => $this->symptoms,
             'doctor_id' => $this->doctor_id,
             'doctor_name' => $this->doctor_name,
+            'doctor_department' => $this->doctor_department,
             'notes' => $this->notes,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

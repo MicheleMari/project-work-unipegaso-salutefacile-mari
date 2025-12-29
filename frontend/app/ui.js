@@ -90,6 +90,7 @@ export function renderTable() {
         const safeName = safeText(app.paziente_nome);
         const safeDoctor = safeText(app.dottore);
         const safeParams = safeText(app.parametri || '-', '-');
+        const safeDoctorDept = safeText(app.doctor_department || '', '');
         const safeState = safeText(app.stato);
         const safeId = escapeHtml(app.id);
         const arrival = new Date(app.data_visita);
@@ -133,7 +134,12 @@ export function renderTable() {
                 <div class="text-xs text-slate-400 font-mono">ID: ${safeId}</div>
             </td>
             <td class="px-6 py-4 align-top">${priorityHtml}<div class="text-xs text-slate-500 mt-1">${safeParams}</div></td>
-            <td class="px-6 py-4 align-top text-sm">${safeDoctor}<br><span class="text-xs text-slate-400 uppercase">Fase: ${safeState}</span></td>
+            <td class="px-6 py-4 align-top text-sm">
+                <button data-action="show-assignment" data-id="${safeId}" class="text-xs font-bold px-2 py-1 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 transition">
+                    ${app.doctor_department ? 'Specialista' : 'Pronto Soccorso'}
+                </button>
+                ${app.doctor_department ? `<div class="text-xs text-slate-500 mt-1">${safeDoctorDept || ''}</div>` : ''}
+            </td>
             <td class="px-6 py-4 align-top text-xs font-mono text-slate-500">
                 ${new Date(app.data_visita).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 <div class="mt-1">${alertIcon}</div>

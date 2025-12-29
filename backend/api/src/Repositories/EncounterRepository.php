@@ -36,11 +36,14 @@ class EncounterRepository
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
+                    u.id AS doctor_id,
                     u.name AS doctor_name,
-                    u.surname AS doctor_surname
+                    u.surname AS doctor_surname,
+                    d.name AS doctor_department
                 FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
                 LEFT JOIN users u ON u.id = e.user_id
+                LEFT JOIN departments d ON d.id = u.department_id
                 ORDER BY e.created_at DESC, e.id DESC';
         $rows = $this->pdo->query($sql)->fetchAll() ?: [];
         return array_map(fn ($row) => $this->map($row), $rows);
@@ -66,11 +69,14 @@ class EncounterRepository
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
+                    u.id AS doctor_id,
                     u.name AS doctor_name,
-                    u.surname AS doctor_surname
+                    u.surname AS doctor_surname,
+                    d.name AS doctor_department
                 FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
                 LEFT JOIN users u ON u.id = e.user_id
+                LEFT JOIN departments d ON d.id = u.department_id
                 WHERE e.user_id = :doctor_id
                 ORDER BY e.created_at DESC, e.id DESC';
         $stmt = $this->pdo->prepare($sql);
@@ -99,11 +105,14 @@ class EncounterRepository
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
+                    u.id AS doctor_id,
                     u.name AS doctor_name,
-                    u.surname AS doctor_surname
+                    u.surname AS doctor_surname,
+                    d.name AS doctor_department
                 FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
                 LEFT JOIN users u ON u.id = e.user_id
+                LEFT JOIN departments d ON d.id = u.department_id
                 WHERE e.id = :id';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id]);
@@ -131,11 +140,14 @@ class EncounterRepository
                     p.phone,
                     p.email,
                     p.created_at AS patient_created_at,
+                    u.id AS doctor_id,
                     u.name AS doctor_name,
-                    u.surname AS doctor_surname
+                    u.surname AS doctor_surname,
+                    d.name AS doctor_department
                 FROM emergency e
                 JOIN patients p ON p.id = e.patient_id
                 LEFT JOIN users u ON u.id = e.user_id
+                LEFT JOIN departments d ON d.id = u.department_id
                 WHERE e.id = :id AND e.user_id = :doctor_id';
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute(['id' => $id, 'doctor_id' => $doctorId]);
@@ -204,6 +216,7 @@ class EncounterRepository
             'symptoms' => $row['description'] ?? null,
             'doctor_id' => isset($row['doctor_id']) ? (int) $row['doctor_id'] : null,
             'doctor_name' => trim(($row['doctor_name'] ?? '') . ' ' . ($row['doctor_surname'] ?? '')) ?: null,
+            'doctor_department' => $row['doctor_department'] ?? null,
             'notes' => $notes,
             'created_at' => $this->toIsoDate($row['encounter_created_at'] ?? null),
             'updated_at' => $this->toIsoDate($row['updated_at'] ?? null),

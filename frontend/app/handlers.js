@@ -611,7 +611,8 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             const parsedData = parseCF(a.cf, state.cityMap);
             if (parsedData) { document.getElementById('pd-dob').value = parsedData.birthDate; document.getElementById('pd-gender').value = parsedData.gender; document.getElementById('pd-gender-display').innerText = parsedData.gender; document.getElementById('pd-age').value = `${parsedData.age} anni`; document.getElementById('pd-birthplace').value = parsedData.cityName; } 
             else { document.getElementById('pd-dob').value = "N/D"; document.getElementById('pd-gender').value = "Maschio"; document.getElementById('pd-gender-display').innerText = "Maschio"; document.getElementById('pd-age').value = "--"; document.getElementById('pd-birthplace').value = "N/D"; }
-            document.getElementById('pd-address').value = a.indirizzo || "Non Specificato"; document.getElementById('pd-city').value = a.citta || "Non Specificato"; document.getElementById('pd-phone').value = a.telefono || "Non Specificato"; document.getElementById('pd-email').value = a.email || "Non Specificato";
+            const resValue = [a.indirizzo, a.citta].filter(Boolean).join(' - ') || "Non Specificato";
+            document.getElementById('pd-address').value = resValue; document.getElementById('pd-phone').value = a.telefono || "Non Specificato"; document.getElementById('pd-email').value = a.email || "Non Specificato";
             toggleModal('patient-details-modal', true); lucide.createIcons();
         }
         function toggleEditPatient({ silent = false } = {}) {
@@ -636,8 +637,8 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             const payload = {
                 paziente_nome: cleanField(document.getElementById('pd-name').value),
                 cf: cleanField(document.getElementById('pd-cf').value),
-                indirizzo: cleanField(document.getElementById('pd-address').value, 'Non Specificato'),
-                citta: cleanField(document.getElementById('pd-city').value, 'Non Specificato'),
+                indirizzo: existing.indirizzo, // indirizzo e citta consolidati in un unico campo visuale
+                citta: existing.citta,
                 telefono: cleanField(document.getElementById('pd-phone').value, 'Non Specificato'),
                 email: cleanField(document.getElementById('pd-email').value, 'Non Specificato'),
                 priorita: existing.priorita,

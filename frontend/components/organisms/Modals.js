@@ -128,23 +128,28 @@ export const modals = () => `
                         </div>
                     </div>
 
-                    <div class="col-span-1 sm:col-span-2 border-t border-slate-100 pt-4 mt-2">
+                    <div class="col-span-1 sm:col-span-2 border-t border-slate-100 pt-4 mt-2 space-y-3">
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Residenza</label>
-                                <input type="text" id="pd-address" readonly value="Via Roma, 10" class="block w-full px-3 py-1.5 bg-transparent border border-transparent rounded text-sm text-slate-700 focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all mb-1 sensitive-data">
-                                <input type="text" id="pd-city" readonly value="00100 Roma (RM)" class="block w-full px-3 py-1.5 bg-transparent border border-transparent rounded text-sm text-slate-700 focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Telefono</label>
+                                <div class="relative">
+                                    <i data-lucide="phone" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
+                                    <input type="text" id="pd-phone" readonly value="+39 333 1234567" class="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
+                                </div>
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Contatti</label>
-                                <div class="relative mb-1">
-                                    <i data-lucide="phone" class="absolute left-3 top-2 w-3 h-3 text-slate-400"></i>
-                                    <input type="text" id="pd-phone" readonly value="+39 333 1234567" class="block w-full pl-8 pr-3 py-1.5 bg-transparent border border-transparent rounded text-sm text-slate-700 focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
-                                </div>
+                                <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email</label>
                                 <div class="relative">
-                                    <i data-lucide="mail" class="absolute left-3 top-2 w-3 h-3 text-slate-400"></i>
-                                    <input type="text" id="pd-email" readonly value="email@esempio.it" class="block w-full pl-8 pr-3 py-1.5 bg-transparent border border-transparent rounded text-sm text-slate-700 focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
+                                    <i data-lucide="mail" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
+                                    <input type="text" id="pd-email" readonly value="email@esempio.it" class="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
                                 </div>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Residenza</label>
+                            <div class="relative">
+                                <i data-lucide="home" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
+                                <input type="text" id="pd-address" readonly value="Via Roma, 10 - 00100 Roma (RM)" class="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
                             </div>
                         </div>
                     </div>
@@ -152,7 +157,7 @@ export const modals = () => `
 
                 <div class="pt-6 flex justify-end gap-3">
                     <button data-action="close-modal" data-modal="patient-details-modal" class="text-slate-500 hover:bg-slate-100 px-4 py-2.5 rounded-lg text-sm font-bold">Chiudi</button>
-                    <button id="pd-save-btn" data-action="save-patient" class="hidden bg-medical-600 hover:bg-medical-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg transition-all">Salva Modifiche</button>
+                    <button id="pd-save-btn" data-action="save-patient" style="background-color:#0284c7;color:#fff;" class="hidden bg-medical-600 hover:bg-medical-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg transition-all">Salva Modifiche</button>
                 </div>
             </div>
         </div>

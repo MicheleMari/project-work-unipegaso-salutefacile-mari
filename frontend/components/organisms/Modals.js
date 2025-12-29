@@ -129,27 +129,27 @@ export const modals = () => `
                     </div>
 
                     <div class="col-span-1 sm:col-span-2 border-t border-slate-100 pt-4 mt-2 space-y-3">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                            <div class="sm:col-span-1">
                                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Telefono</label>
                                 <div class="relative">
-                                    <i data-lucide="phone" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
-                                    <input type="text" id="pd-phone" readonly value="+39 333 1234567" class="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
+                                    <i data-lucide="phone" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                                    <input type="text" id="pd-phone" readonly value="+39 333 1234567" class="block w-full pl-9 pr-3 py-2 bg-transparent border border-transparent rounded-lg text-slate-800 font-medium focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
                                 </div>
                             </div>
-                            <div>
+                            <div class="sm:col-span-2">
                                 <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Email</label>
                                 <div class="relative">
-                                    <i data-lucide="mail" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
-                                    <input type="text" id="pd-email" readonly value="email@esempio.it" class="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
+                                    <i data-lucide="mail" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                                    <input type="text" id="pd-email" readonly value="email@esempio.it" class="block w-full pl-9 pr-3 py-2 bg-transparent border border-transparent rounded-lg text-slate-800 font-medium focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
                                 </div>
                             </div>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Residenza</label>
                             <div class="relative">
-                                <i data-lucide="home" class="absolute left-3 top-3 w-4 h-4 text-slate-400"></i>
-                                <input type="text" id="pd-address" readonly value="Via Roma, 10 - 00100 Roma (RM)" class="block w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:bg-white focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data">
+                                <i data-lucide="home" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                                <input type="text" id="pd-address" readonly value="Via Roma, 10 - 00100 Roma (RM)" class="block w-full pl-9 pr-3 py-2 bg-transparent border border-transparent rounded-lg text-slate-800 font-medium focus:bg-slate-50 focus:border-medical-500 focus:ring-2 focus:ring-medical-200 outline-none transition-all sensitive-data" autocomplete="off">
                             </div>
                         </div>
                     </div>

@@ -73,7 +73,8 @@ function toLegacy(encounter = {}) {
         doctor_id: encounter.doctor_id || null,
         doctor_department: encounter.doctor_department || null,
         parametri: encounter.symptoms || '-',
-        indirizzo: patient.address || null,
+        // backend restituisce residence_address: preserviamo compatibilità legacy su "indirizzo"
+        indirizzo: patient.address || patient.residence_address || null,
         citta: patient.city || null,
         telefono: patient.phone || null,
         email: patient.email || null,

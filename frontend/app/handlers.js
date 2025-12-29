@@ -152,6 +152,17 @@ async function loadData() {
     }
 }
 
+function titleCaseAddress(val) {
+    if (!val) return '';
+    return String(val).replace(/\b([A-Za-zÀ-ÿ])([A-Za-zÀ-ÿ]*)/g, (match, first, rest) => {
+        const word = first + rest;
+        const upperWord = word.toUpperCase();
+        // Mantieni acronimi brevi già maiuscoli (es. BA)
+        if (word.length <= 3 && word === upperWord) return upperWord;
+        return first.toUpperCase() + rest.toLowerCase();
+    });
+}
+
 function sanitizeAppointment(data) {
     return {
         ...data,
@@ -161,7 +172,8 @@ function sanitizeAppointment(data) {
         safeStato: safeText(data.stato || ''),
         safeParametri: safeText(data.parametri || '-', '-'),
         safeDottore: safeText(data.dottore || '-', '-'),
-        safeIndirizzo: safeText(data.indirizzo || 'N/D', 'N/D'),
+        // fallback a residence_address per record provenienti direttamente dal backend e title-case
+        safeIndirizzo: safeText(titleCaseAddress(data.indirizzo || data.residence_address || 'N/D'), 'N/D'),
         safeCitta: safeText(data.citta || '', ''),
         safeEmail: safeText(data.email || '', ''),
         safeTelefono: safeText(data.telefono || '', ''),
@@ -611,8 +623,10 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             const parsedData = parseCF(a.cf, state.cityMap);
             if (parsedData) { document.getElementById('pd-dob').value = parsedData.birthDate; document.getElementById('pd-gender').value = parsedData.gender; document.getElementById('pd-gender-display').innerText = parsedData.gender; document.getElementById('pd-age').value = `${parsedData.age} anni`; document.getElementById('pd-birthplace').value = parsedData.cityName; } 
             else { document.getElementById('pd-dob').value = "N/D"; document.getElementById('pd-gender').value = "Maschio"; document.getElementById('pd-gender-display').innerText = "Maschio"; document.getElementById('pd-age').value = "--"; document.getElementById('pd-birthplace').value = "N/D"; }
-            const resValue = [a.indirizzo, a.citta].filter(Boolean).join(' - ') || "Non Specificato";
-            document.getElementById('pd-address').value = resValue; document.getElementById('pd-phone').value = a.telefono || "Non Specificato"; document.getElementById('pd-email').value = a.email || "Non Specificato";
+            const resValue = titleCaseAddress([a.indirizzo, a.citta].filter(Boolean).join(' - ') || "Non Specificato");
+            const addrInput = document.getElementById('pd-address');
+            if (addrInput) addrInput.value = resValue;
+            document.getElementById('pd-phone').value = a.telefono || "Non Specificato"; document.getElementById('pd-email').value = a.email || "Non Specificato";
             toggleModal('patient-details-modal', true); lucide.createIcons();
         }
         function toggleEditPatient({ silent = false } = {}) {
@@ -637,8 +651,8 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             const payload = {
                 paziente_nome: cleanField(document.getElementById('pd-name').value),
                 cf: cleanField(document.getElementById('pd-cf').value),
-                indirizzo: existing.indirizzo, // indirizzo e citta consolidati in un unico campo visuale
-                citta: existing.citta,
+                indirizzo: cleanField(document.getElementById('pd-address').value, 'Non Specificato'),
+                citta: null,
                 telefono: cleanField(document.getElementById('pd-phone').value, 'Non Specificato'),
                 email: cleanField(document.getElementById('pd-email').value, 'Non Specificato'),
                 priorita: existing.priorita,
@@ -655,8 +669,7 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
                 // Aggiorna la modale con i valori restituiti dal backend
                 document.getElementById('pd-name').value = saved.paziente_nome;
                 document.getElementById('pd-cf').value = saved.cf;
-                document.getElementById('pd-address').value = saved.indirizzo || '';
-                document.getElementById('pd-city').value = saved.citta || '';
+                document.getElementById('pd-address').value = titleCaseAddress(saved.indirizzo || '');
                 document.getElementById('pd-phone').value = saved.telefono || '';
                 document.getElementById('pd-email').value = saved.email || '';
                 // Forza sync con backend per avere cf aggiornato e altri campi server-side
@@ -667,8 +680,7 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
                     updateAppointment(id, refreshed);
                     document.getElementById('pd-name').value = refreshed.paziente_nome;
                     document.getElementById('pd-cf').value = refreshed.cf;
-                    document.getElementById('pd-address').value = refreshed.indirizzo || '';
-                    document.getElementById('pd-city').value = refreshed.citta || '';
+                    document.getElementById('pd-address').value = titleCaseAddress(refreshed.indirizzo || '');
                     document.getElementById('pd-phone').value = refreshed.telefono || '';
                     document.getElementById('pd-email').value = refreshed.email || '';
                 }
@@ -684,6 +696,8 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
                 renderTable();
             }
         }
+
+        // Autocomplete indirizzo rimosso: inserimento manuale
 
         function openVisitModal(id) { const a=state.appointments.find(x=>x.id===id); document.getElementById('visit_assign_id').value=id; document.getElementById('visit-patient-name').innerText=a.paziente_nome; const disp = document.getElementById('visit_specialty_display'); disp.innerText = "Seleziona Reparto..."; disp.classList.remove('text-slate-900'); document.getElementById('visit_specialty').value = ""; const search = document.querySelector('#visit-specialty-container input[type="text"]'); if(search) search.value = ""; toggleModal('visit-assignment-modal', true); lucide.createIcons(); }
         async function confirmVisitAssignment() { 

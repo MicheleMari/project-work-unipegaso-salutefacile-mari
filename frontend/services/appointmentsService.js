@@ -57,7 +57,17 @@ function normalizePayload(payload = {}) {
         notes: payload.notes ?? null,
     };
 
-    return { patient, encounter };
+    const investigations = Array.isArray(payload.investigations)
+        ? payload.investigations
+            .map((val) => parseInt(val, 10))
+            .filter((val) => Number.isInteger(val) && val > 0)
+        : null;
+
+    const body = { patient, encounter };
+    if (Object.prototype.hasOwnProperty.call(payload, 'investigations')) {
+        body.investigations = investigations ?? [];
+    }
+    return body;
 }
 
 function toLegacy(encounter = {}) {
@@ -79,6 +89,7 @@ function toLegacy(encounter = {}) {
         telefono: patient.phone || null,
         email: patient.email || null,
         referto: encounter.notes ? { esito: encounter.notes, terapia: '', allegati: [] } : null,
+        investigations: Array.isArray(encounter.investigations) ? encounter.investigations : [],
     };
 }
 

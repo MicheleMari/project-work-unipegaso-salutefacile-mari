@@ -64,6 +64,20 @@ CREATE TABLE investigations (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE investigations_performed (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    emergency_id INT NOT NULL,
+    investigation_id INT NOT NULL,
+    performed_by INT NOT NULL,
+    performed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    outcome TEXT NULL,
+    notes TEXT NULL,
+    attachment_path VARCHAR(255) NULL,
+    CONSTRAINT fk_ip_emergency FOREIGN KEY (emergency_id) REFERENCES emergency(id),
+    CONSTRAINT fk_ip_investigation FOREIGN KEY (investigation_id) REFERENCES investigations(id),
+    CONSTRAINT fk_ip_user FOREIGN KEY (performed_by) REFERENCES users(id)
+);
+
 CREATE TABLE specialist_visits (
     id INT AUTO_INCREMENT PRIMARY KEY,
     patient_id INT NOT NULL,
@@ -99,3 +113,12 @@ VALUES
 ('Luca', 'Rossi', 1, NULL, 'OPS001', 'ops@ospedale.test', '$2b$10$rv69gR60hZRFNNG1yjr32uBUyafcrn3UFP4kdU2pFtOP31yNO2wZu'),
 ('Giulia', 'Bianchi', 2, 1, 'SPEC001', 'cardio@ospedale.test', '$2b$10$HCDbYfx1arlASQmaJ4nq8ec/67mUuaIN9RgzBmQp.Pa7oj0xnWCDe'),
 ('Marco', 'Verdi', 2, 2, 'SPEC002', 'orto@ospedale.test', '$2b$10$HCDbYfx1arlASQmaJ4nq8ec/67mUuaIN9RgzBmQp.Pa7oj0xnWCDe');
+
+INSERT INTO investigations (title, description) VALUES
+('ECG', 'Elettrocardiogramma a 12 derivazioni'),
+('Stick Urine', 'Analisi rapida urine'),
+('Emogas (EGA)', 'Emogasanalisi arteriosa'),
+('Prelievo Ematico', 'Prelievo per esami ematochimici'),
+('Tampone Covid', 'Test antigenico rapido'),
+('Glucometria', 'Misurazione glicemia capillare'),
+('Alcol Test', 'Test alcolemico');

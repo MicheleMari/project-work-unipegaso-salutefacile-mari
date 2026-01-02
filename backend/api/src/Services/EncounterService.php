@@ -7,17 +7,20 @@ use App\Core\Security;
 use App\Models\Encounter;
 use App\Models\Patient;
 use App\Repositories\EncounterRepository;
+use App\Repositories\InvestigationRepository;
 use App\Repositories\PatientRepository;
 
 class EncounterService
 {
     private EncounterRepository $encounters;
     private PatientRepository $patients;
+    private InvestigationRepository $investigations;
 
     public function __construct()
     {
         $this->encounters = new EncounterRepository();
         $this->patients = new PatientRepository();
+        $this->investigations = new InvestigationRepository();
     }
 
     public function list(): array
@@ -25,10 +28,13 @@ class EncounterService
         $user = $this->currentUser();
         if ($user['role'] === 'dottore') {
             $doctorId = (int) ($user['id'] ?? 0);
-            return array_map(fn (Encounter $e) => $e->toArray(), $this->encounters->allForDoctor($doctorId));
+            $items = $this->encounters->allForDoctor($doctorId);
+        } else {
+            $items = $this->encounters->all();
         }
 
-        return array_map(fn (Encounter $e) => $e->toArray(), $this->encounters->all());
+        $items = $this->attachInvestigations($items);
+        return array_map(fn (Encounter $e) => $e->toArray(), $items);
     }
 
     public function get(int $id): array
@@ -43,6 +49,7 @@ class EncounterService
         if (!$encounter) {
             throw new HttpException('Encounter not found', 404);
         }
+        $encounter->investigations = $this->investigations->listForEncounter($encounter->id);
         return $encounter->toArray();
     }
 
@@ -60,6 +67,8 @@ class EncounterService
         $encounter->doctor_id = $encounter->doctor_id ?: ($user['id'] ?? 1);
         $created = $this->encounters->create($encounter);
         $created->patient = $patient;
+        $this->persistInvestigations($data['investigations'] ?? null, $created->id, $user);
+        $created->investigations = $this->investigations->listForEncounter($created->id);
         return $created->toArray();
     }
 
@@ -80,6 +89,8 @@ class EncounterService
         $this->applyRoleConstraints($user, $existing, $encounter);
         $this->encounters->update($encounter);
         $encounter->patient = $patient;
+        $this->persistInvestigations($data['investigations'] ?? null, $encounter->id, $user);
+        $encounter->investigations = $this->investigations->listForEncounter($encounter->id);
         return $encounter->toArray();
     }
 
@@ -107,6 +118,8 @@ class EncounterService
         $this->applyRoleConstraints($user, $existing, $encounter);
         $this->encounters->update($encounter);
         $encounter->patient = $patient;
+        $this->persistInvestigations($data['investigations'] ?? null, $encounter->id, $user);
+        $encounter->investigations = $this->investigations->listForEncounter($encounter->id);
 
         return $encounter->toArray();
     }
@@ -168,6 +181,28 @@ class EncounterService
             return $this->encounters->findForDoctor($id, (int) ($user['id'] ?? 0));
         }
         return $this->encounters->find($id);
+    }
+
+    /**
+     * @param Encounter[] $items
+     * @return Encounter[]
+     */
+    private function attachInvestigations(array $items): array
+    {
+        foreach ($items as $encounter) {
+            $encounter->investigations = $this->investigations->listForEncounter($encounter->id);
+        }
+        return $items;
+    }
+
+    private function persistInvestigations($rawInvestigations, int $encounterId, array $user): void
+    {
+        if ($rawInvestigations === null) {
+            return;
+        }
+        $userId = isset($user['id']) ? (int) $user['id'] : null;
+        $investigationIds = is_array($rawInvestigations) ? $rawInvestigations : [];
+        $this->investigations->syncPerformed($encounterId, $investigationIds, $userId);
     }
 
     private function validatePatient(array $data, bool $isCreate): array

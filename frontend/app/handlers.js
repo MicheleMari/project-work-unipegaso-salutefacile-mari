@@ -6,6 +6,7 @@ import { addAppointment, addFile, clearFiles, removeFile, setAppointments, setFi
 import { renderTable, toggleKPICard, toggleMobileCard, updateFilterButtons, updateKPIs } from './ui.js';
 import { parseCF } from '../utils/cfUtils.js';
 import { loadReferenceData } from '../services/dataLoader.js';
+import { fetchInvestigations } from '../services/investigationsService.js';
 import { escapeHtml, safeText } from '../utils/sanitize.js';
 import { loadSession, computePermissions, clearSession } from '../services/authService.js';
 export async function initApp() {
@@ -142,9 +143,18 @@ function bindUIEvents() {
 
 async function loadData() {
     try {
-        const { departmentsList, cadastralLines } = await loadReferenceData();
+        const [references, investigations] = await Promise.all([
+            loadReferenceData(),
+            fetchInvestigations().catch((err) => {
+                console.warn('Investigations fetch failed:', err);
+                return [];
+            })
+        ]);
+        const { departmentsList, cadastralLines } = references;
         constants.departmentsList = departmentsList;
         constants.cadastralLines = cadastralLines;
+        state.investigations = Array.isArray(investigations) ? investigations : [];
+        renderInvestigationsList();
         // Applica la privacy già al primo caricamento (es. dopo un refresh)
         applyPrivacyStyles(state.privacyEnabled);
     } catch (error) {
@@ -180,6 +190,33 @@ function sanitizeAppointment(data) {
         safeRefertoEsito: safeText(data?.referto?.esito || '--', '--'),
         safeRefertoTerapia: safeText(data?.referto?.terapia || '--', '--'),
     };
+}
+
+function renderInvestigationsList() {
+    const container = document.getElementById('investigations-list');
+    if (!container) return;
+    const items = Array.isArray(state.investigations) ? state.investigations : [];
+
+    if (!items.length) {
+        container.innerHTML = '<div class="col-span-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">Nessun accertamento configurato</div>';
+        return;
+    }
+
+    const palette = ['red', 'blue', 'amber', 'emerald', 'purple', 'pink', 'orange', 'slate'];
+    container.innerHTML = items.map((item, idx) => {
+        const color = palette[idx % palette.length];
+        const safeTitle = escapeHtml(item.title || `Accertamento ${item.id}`);
+        return `<label class="cursor-pointer block relative group exam-item">
+            <input type="checkbox" name="exams" value="${item.id}" data-label="${safeTitle}" class="peer sr-only">
+            <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-medical-500 peer-checked:bg-medical-50 hover:bg-slate-50">
+                <div class="w-8 h-8 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center shrink-0"><i data-lucide="clipboard-list" class="w-4 h-4"></i></div>
+                <span class="font-bold text-slate-700 text-xs">${safeTitle}</span>
+            </div>
+        </label>`;
+    }).join('');
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
 }
 
 function handleActionClick(event) {
@@ -590,24 +627,39 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
             }
             closeModal('booking-modal'); 
             filterTable('all'); 
-            showToast('Paziente registrato'); 
-            updateKPIs(); 
-        }
-        function openTriageModal(id) { const a=state.appointments.find(x=>x.id===id); document.getElementById('triage_id').value=id; document.getElementById('triage-patient-name').innerText=a.paziente_nome; document.getElementById('triage-form').reset(); toggleModal('triage-modal', true); }
-        async function handleTriageSubmit(e) { 
-            e.preventDefault(); 
-            const form = e.currentTarget; 
-            if (!validateTriageForm(form)) return; 
-            const id=parseInt(document.getElementById('triage_id').value); 
-            const exams = [...form.querySelectorAll('input[name=\"exams\"]:checked')].map((el) => el.value).join(', ') || 'Nessuno';
-            const vitals = `PA:${document.getElementById('v_pa').value} FC:${document.getElementById('v_fc').value} SpO2:${document.getElementById('v_spo2').value} TC:${document.getElementById('v_tc').value}`;
-            const existing = state.appointments.find(x => x.id === id);
-            const payload = { stato: 'Accertamenti Richiesti', priorita: existing?.priorita || 'green', parametri: `${vitals} | Esami: ${exams}` };
-            let updated;
-            try {
-                const saved = await updateAppointmentApi(id, payload);
-                updated = updateAppointment(id, saved);
-            } catch (error) {
+        showToast('Paziente registrato'); 
+        updateKPIs(); 
+    }
+    function prefillInvestigations(selected = []) {
+        const ids = new Set(
+            (selected || [])
+                .map((item) => item?.investigation_id ?? item?.id ?? item)
+                .map((val) => parseInt(val, 10))
+                .filter((id) => Number.isInteger(id) && id > 0)
+        );
+        const checkboxes = document.querySelectorAll('input[name="exams"]');
+        checkboxes.forEach((el) => {
+            const id = parseInt(el.value, 10);
+            el.checked = ids.has(id);
+        });
+    }
+    function openTriageModal(id) { const a=state.appointments.find(x=>x.id===id); document.getElementById('triage_id').value=id; document.getElementById('triage-patient-name').innerText=a.paziente_nome; document.getElementById('triage-form').reset(); renderInvestigationsList(); prefillInvestigations(a?.investigations || []); toggleModal('triage-modal', true); }
+    async function handleTriageSubmit(e) { 
+        e.preventDefault(); 
+        const form = e.currentTarget; 
+        if (!validateTriageForm(form)) return; 
+        const id=parseInt(document.getElementById('triage_id').value); 
+        const selectedExams = [...form.querySelectorAll('input[name=\"exams\"]:checked')];
+        const exams = selectedExams.map((el) => el.dataset.label || el.value).join(', ') || 'Nessuno';
+        const investigationIds = selectedExams.map((el) => parseInt(el.value, 10)).filter((val) => Number.isInteger(val) && val > 0);
+        const vitals = `PA:${document.getElementById('v_pa').value} FC:${document.getElementById('v_fc').value} SpO2:${document.getElementById('v_spo2').value} TC:${document.getElementById('v_tc').value}`;
+        const existing = state.appointments.find(x => x.id === id);
+        const payload = { stato: 'Accertamenti Richiesti', priorita: existing?.priorita || 'green', parametri: `${vitals} | Esami: ${exams}`, investigations: investigationIds };
+        let updated;
+        try {
+            const saved = await updateAppointmentApi(id, payload);
+            updated = updateAppointment(id, saved);
+        } catch (error) {
                 console.warn('Triage update offline:', error);
                 updated = updateAppointment(id, payload);
                 showToast('Backend non raggiungibile, salvataggio locale');

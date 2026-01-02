@@ -17,6 +17,8 @@ class Encounter
     public ?string $created_at;
     public ?string $updated_at;
     public ?Patient $patient;
+    /** @var array<int, array<string, mixed>> */
+    public array $investigations;
 
     public function __construct(array $data = [])
     {
@@ -35,6 +37,7 @@ class Encounter
         $this->patient = isset($data['patient']) && $data['patient'] instanceof Patient
             ? $data['patient']
             : (isset($data['patient']) && is_array($data['patient']) ? new Patient($data['patient']) : null);
+        $this->investigations = $data['investigations'] ?? [];
     }
 
     public function toArray(): array
@@ -53,6 +56,7 @@ class Encounter
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'patient' => $this->patient ? $this->patient->toArray() : null,
+            'investigations' => $this->investigations,
         ];
     }
 }

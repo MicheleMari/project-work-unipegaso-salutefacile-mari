@@ -39,5 +39,6 @@ $router->delete('/ps/encounters/{id}', [$encounters, 'destroy'], $protected);
 
 $router->get('/references/departments', [$references, 'departments'], ['roles' => ['operatore', 'dottore', 'admin']]);
 $router->get('/references/cadastral', [$references, 'cadastral'], ['roles' => ['operatore', 'dottore', 'admin']]);
+$router->get('/references/investigations', [$references, 'investigations'], ['roles' => ['operatore', 'dottore', 'admin']]);
 
 $router->dispatch(Request::fromGlobals());

@@ -11,7 +11,8 @@ export const state = {
     cityMap: {},
     privacyEnabled: false,
     idleSeconds: 0,
-    autoLockInterval: null
+    autoLockInterval: null,
+    investigations: []
 };
 
 export const constants = {

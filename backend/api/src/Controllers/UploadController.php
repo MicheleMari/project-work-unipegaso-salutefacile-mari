@@ -11,8 +11,8 @@ class UploadController
 
     public function __construct()
     {
-        // Salva i file nella cartella /uploads alla root del progetto
-        $this->uploadDir = dirname(__DIR__, 3) . '/uploads';
+        // Salva i file nella cartella /uploads alla root del progetto (servita dal router)
+        $this->uploadDir = dirname(__DIR__, 4) . '/uploads';
     }
 
     public function store(Request $request): void

@@ -6,20 +6,23 @@ use App\Core\Config;
 use App\Http\Response;
 use App\Core\HttpException;
 use App\Repositories\InvestigationRepository;
+use App\Repositories\DepartmentRepository;
 
 class ReferenceController
 {
     private InvestigationRepository $investigations;
+    private DepartmentRepository $departments;
 
     public function __construct()
     {
         $this->investigations = new InvestigationRepository();
+        $this->departments = new DepartmentRepository();
     }
 
     public function departments(): void
     {
-        $path = Config::get('references.departments');
-        $this->serveJsonFile($path, 'departments');
+        $list = $this->departments->all();
+        Response::json(['data' => array_map(fn ($item) => $item->toArray(), $list)]);
     }
 
     public function cadastral(): void

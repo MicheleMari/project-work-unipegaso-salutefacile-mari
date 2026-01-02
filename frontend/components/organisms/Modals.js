@@ -318,31 +318,8 @@ export const modals = () => `
                                 </div>
                             </div>
                             <!-- Options List -->
-                            <div class="custom-options-list">
-                                <div data-action="select-option" data-select="visit-specialty-container" data-value="Medicina Generale PS" data-display="Medicina Generale PS" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center group-hover:bg-blue-600 group-hover:text-white transition-colors"><i data-lucide="activity" class="w-4 h-4"></i></div>
-                                    <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Medicina Generale PS</span>
-                                </div>
-                                <div data-action="select-option" data-select="visit-specialty-container" data-value="Cardiologia" data-display="Cardiologia" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-red-100 text-red-600 flex items-center justify-center group-hover:bg-red-600 group-hover:text-white transition-colors"><i data-lucide="heart-pulse" class="w-4 h-4"></i></div>
-                                    <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Cardiologia</span>
-                                </div>
-                                <div data-action="select-option" data-select="visit-specialty-container" data-value="Chirurgia Generale" data-display="Chirurgia Generale" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors"><i data-lucide="scissors" class="w-4 h-4"></i></div>
-                                    <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Chirurgia Generale</span>
-                                </div>
-                                <div data-action="select-option" data-select="visit-specialty-container" data-value="Ortopedia" data-display="Ortopedia" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center group-hover:bg-orange-600 group-hover:text-white transition-colors"><i data-lucide="bone" class="w-4 h-4"></i></div>
-                                    <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Ortopedia</span>
-                                </div>
-                                <div data-action="select-option" data-select="visit-specialty-container" data-value="Neurologia" data-display="Neurologia" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center group-hover:bg-purple-600 group-hover:text-white transition-colors"><i data-lucide="brain" class="w-4 h-4"></i></div>
-                                    <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Neurologia</span>
-                                </div>
-                                 <div data-action="select-option" data-select="visit-specialty-container" data-value="Pediatria" data-display="Pediatria" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
-                                    <div class="w-8 h-8 rounded-full bg-pink-100 text-pink-600 flex items-center justify-center group-hover:bg-pink-600 group-hover:text-white transition-colors"><i data-lucide="baby" class="w-4 h-4"></i></div>
-                                    <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">Pediatria</span>
-                                </div>
+                            <div class="custom-options-list" id="visit-departments-options">
+                                <div class="px-3 py-2 text-sm text-slate-500">Caricamento reparti...</div>
                             </div>
                         </div>
                     </div>

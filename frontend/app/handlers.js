@@ -160,6 +160,7 @@ async function loadData() {
         constants.cadastralLines = cadastralLines;
         state.investigations = Array.isArray(investigations) ? investigations : [];
         renderInvestigationsList();
+        renderVisitDepartmentsOptions();
         // Applica la privacy già al primo caricamento (es. dopo un refresh)
         applyPrivacyStyles(state.privacyEnabled);
     } catch (error) {
@@ -255,6 +256,40 @@ function renderInvestigationsList() {
                 <span class="font-bold text-slate-700 text-xs">${safeTitle}</span>
             </div>
         </label>`;
+    }).join('');
+    if (window.lucide) {
+        window.lucide.createIcons();
+    }
+}
+
+function normalizeDepartmentStyle(dept, index = 0) {
+    const palette = ['amber', 'blue', 'emerald', 'orange', 'purple', 'pink', 'indigo', 'cyan', 'teal', 'fuchsia', 'slate'];
+    const safeName = escapeHtml(dept?.name || `Reparto ${index + 1}`);
+    const rawColor = typeof dept?.color === 'string' ? dept.color : '';
+    const color = /^[a-z-]+$/.test(rawColor) ? rawColor : palette[index % palette.length];
+    const icon = escapeHtml(dept?.icon || 'stethoscope');
+    return { name: safeName, color, icon };
+}
+
+function renderVisitDepartmentsOptions() {
+    const container = document.getElementById('visit-departments-options');
+    if (!container) return;
+    const list = Array.isArray(constants.departmentsList) ? constants.departmentsList : [];
+    if (!list.length) {
+        container.innerHTML = '<div class="px-3 py-2 text-sm text-slate-500">Nessun reparto disponibile.</div>';
+        return;
+    }
+    container.innerHTML = list.map((dept, idx) => {
+        const { name, color, icon } = normalizeDepartmentStyle(dept, idx);
+        return `
+            <div data-action="select-option" data-select="visit-specialty-container" data-value="${name}" data-display="${name}"
+                class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group">
+                <div class="w-8 h-8 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center group-hover:bg-${color}-600 group-hover:text-white transition-colors">
+                    <i data-lucide="${icon}" class="w-4 h-4"></i>
+                </div>
+                <span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">${name}</span>
+            </div>
+        `;
     }).join('');
     if (window.lucide) {
         window.lucide.createIcons();
@@ -1210,7 +1245,7 @@ function prefillInvestigations(selected = []) {
 
         // Autocomplete indirizzo rimosso: inserimento manuale
 
-        function openVisitModal(id) { const a=state.appointments.find(x=>x.id===id); document.getElementById('visit_assign_id').value=id; document.getElementById('visit-patient-name').innerText=a.paziente_nome; const disp = document.getElementById('visit_specialty_display'); disp.innerText = "Seleziona Reparto..."; disp.classList.remove('text-slate-900'); document.getElementById('visit_specialty').value = ""; const search = document.querySelector('#visit-specialty-container input[type="text"]'); if(search) search.value = ""; toggleModal('visit-assignment-modal', true); lucide.createIcons(); }
+        function openVisitModal(id) { const a=state.appointments.find(x=>x.id===id); document.getElementById('visit_assign_id').value=id; document.getElementById('visit-patient-name').innerText=a.paziente_nome; const disp = document.getElementById('visit_specialty_display'); disp.innerText = "Seleziona Reparto..."; disp.classList.remove('text-slate-900'); document.getElementById('visit_specialty').value = ""; const search = document.querySelector('#visit-specialty-container input[type="text"]'); if(search) search.value = ""; renderVisitDepartmentsOptions(); toggleModal('visit-assignment-modal', true); lucide.createIcons(); }
         async function confirmVisitAssignment() { 
             const id=parseInt(document.getElementById('visit_assign_id').value); 
             const spec=document.getElementById('visit_specialty').value; 
@@ -1368,7 +1403,7 @@ function prefillInvestigations(selected = []) {
             const visitSection = `<div class="mb-6"><h3 class="text-sm font-bold text-slate-900 uppercase mb-2 border-b-2 border-slate-100 pb-1">Referto Medico</h3><div class="space-y-4"><div><span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Esame Obiettivo & Diagnosi</span><div class="text-sm text-slate-900 bg-slate-50 p-3 rounded border border-slate-100 italic min-h-[60px]">${safe.safeRefertoEsito}</div></div><div><span class="text-[10px] font-bold text-slate-500 uppercase block mb-1">Terapia / Prescrizioni</span><div class="text-sm text-slate-900">${safe.safeRefertoTerapia}</div></div></div></div>`;
             let outcomeSection = ''; let footerSection = '';
             if (type === 'ricovero') {
-                const opts = constants.departmentsList.map(d => `<div data-action="select-option" data-select="discharge-dept-container" data-value="${d.name}" data-display="${d.name}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group"><div class="w-8 h-8 rounded-full bg-${d.color}-100 text-${d.color}-600 flex items-center justify-center group-hover:bg-${d.color}-600 group-hover:text-white transition-colors"><i data-lucide="${d.icon}" class="w-4 h-4"></i></div><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">${escapeHtml(d.name)}</span></div>`).join('');
+                const opts = (constants.departmentsList || []).map((d, idx) => { const { name, color, icon } = normalizeDepartmentStyle(d, idx); return `<div data-action="select-option" data-select="discharge-dept-container" data-value="${name}" data-display="${name}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors group"><div class="w-8 h-8 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center group-hover:bg-${color}-600 group-hover:text-white transition-colors"><i data-lucide="${icon}" class="w-4 h-4"></i></div><span class="text-sm font-medium text-slate-700 group-hover:text-slate-900">${name}</span></div>`; }).join('');
                 outcomeSection = `<div class="bg-red-50 border border-red-100 p-4 rounded mb-6 print:border-black print:bg-white print:border-2"><h3 class="text-sm font-bold text-red-800 uppercase mb-3 print:text-black">Disposizione di Ricovero</h3><div class="grid grid-cols-1 md:grid-cols-2 gap-6"><div class="no-print"><span class="text-xs font-bold text-red-600 uppercase block mb-1">Seleziona Reparto</span><div class="relative custom-select-container" id="discharge-dept-container"><input type="hidden" id="discharge_dept_select" value=""><button type="button" data-action="toggle-select" data-select="discharge-dept-container" class="custom-select-trigger w-full flex items-center justify-between px-4 py-3 bg-white border border-red-200 rounded-xl text-slate-700 font-medium hover:border-red-400 focus:ring-2 focus:ring-red-500 transition-all shadow-sm"><span class="flex items-center gap-3"><span class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center"><i data-lucide="building" class="w-4 h-4"></i></span><span id="discharge_dept_display" class="text-sm">Seleziona Reparto...</span></span><i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 chevron transition-transform duration-200"></i></button><div class="custom-select-options bg-white rounded-xl mt-2 p-1 shadow-xl border border-slate-200"><div class="p-2 border-b border-slate-100 sticky top-0 bg-white z-10"><div class="relative"><i data-lucide="search" class="absolute left-2.5 top-2.5 w-4 h-4 text-slate-400"></i><input type="text" placeholder="Cerca..." data-role="custom-select-search" data-select="discharge-dept-container" data-action="stop-propagation" class="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"></div></div><div class="custom-options-list">${opts}</div></div></div></div><div class="hidden print:block"><span class="text-sm font-bold">Reparto di Destinazione:</span><div class="border-b border-dotted border-black w-full h-8 mt-2"></div></div></div></div>`;
                 footerSection = `<div class="text-center shrink-0"><p class="text-sm font-bold text-slate-900 mb-8">${safe.safeDottore}</p><div class="h-px bg-slate-400 w-48 mx-auto mb-1"></div><p class="text-[10px] text-slate-400 italic">Firma del Medico Accettante</p></div>`;
                 document.getElementById('btn-confirm-discharge').innerText = "Conferma Ricovero"; document.getElementById('btn-confirm-discharge').className = "bg-red-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg flex items-center gap-2";

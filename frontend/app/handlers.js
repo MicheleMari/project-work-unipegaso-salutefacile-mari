@@ -1,5 +1,5 @@
 import { state, constants } from '../state/appState.js';
-import { fetchAppointmentsFromApi, createAppointmentApi, updateAppointmentApi } from '../services/appointmentsService.js';
+import { fetchAppointmentsFromApi, createAppointmentApi, updateAppointmentApi, uploadAttachmentApi } from '../services/appointmentsService.js';
 import { createAppointment } from '../models/appointment.js';
 import { validateBookingForm, validateTriageForm } from '../validators/formValidators.js';
 import { addAppointment, addFile, clearFiles, removeFile, setAppointments, setFilter, setSort, updateAppointment } from './actions.js';
@@ -762,6 +762,54 @@ function prefillInvestigations(selected = []) {
             }
             if (updated) { closeModal('triage-modal'); filterTable('all'); showToast('Codice assegnato, accertamenti richiesti e parametri registrati'); updateKPIs(); } 
         }
+        function parseAttachmentPayload(raw) {
+            if (!raw) return null;
+            if (typeof raw === 'string') {
+                try {
+                    return JSON.parse(raw);
+                } catch (e) {
+                    return { storage_path: raw };
+                }
+            }
+            if (typeof raw === 'object') return raw;
+            return null;
+        }
+
+        function normalizeAttachmentObject(raw, fallback = {}) {
+            const parsed = parseAttachmentPayload(raw) || {};
+            const rawPath = parsed.storage_path ?? parsed.path ?? fallback.storage_path ?? fallback.attachment_path ?? fallback.path ?? '';
+            const storagePath = String(rawPath ?? '').trim();
+            if (!storagePath) return null;
+            const originalName = parsed.original_name ?? parsed.filename ?? fallback.original_name ?? fallback.attachment_name ?? (storagePath.split('/').pop() || null);
+            const mimeType = parsed.mime_type ?? parsed.mime ?? fallback.mime_type ?? fallback.attachment_mime ?? null;
+            const rawSize = parsed.size_bytes ?? parsed.size ?? fallback.size_bytes ?? fallback.attachment_size ?? null;
+            const sizeBytes = Number.isFinite(rawSize) ? Number(rawSize) : (rawSize ? parseInt(rawSize, 10) : null);
+            const id = parsed.id ?? fallback.id ?? fallback.attachment_id ?? null;
+            return {
+                id,
+                storage_path: storagePath,
+                original_name: originalName,
+                mime_type: mimeType,
+                size_bytes: sizeBytes,
+            };
+        }
+
+        function serializeAttachmentForInput(attachment) {
+            if (!attachment || !attachment.storage_path) return '';
+            const payload = {
+                id: attachment.id ?? null,
+                storage_path: attachment.storage_path,
+                original_name: attachment.original_name ?? null,
+                mime_type: attachment.mime_type ?? null,
+                size_bytes: attachment.size_bytes ?? null,
+            };
+            try {
+                return JSON.stringify(payload);
+            } catch (e) {
+                return '';
+            }
+        }
+
         function renderInvestigationsRows(a) {
             const container = document.getElementById('investigations-rows');
             if (!container) return;
@@ -773,12 +821,26 @@ function prefillInvestigations(selected = []) {
             container.innerHTML = items.map((item, idx) => {
                 const invId = item.investigation_id || item.id || idx + 1;
                 const bodyId = `inv-body-${invId}`;
-                const status = (item.outcome || item.notes || item.attachment_path) ? 'Refertato' : 'In corso';
+                const attachment = normalizeAttachmentObject(item.attachment, {
+                    storage_path: item.attachment_path,
+                    original_name: item.attachment_name,
+                    mime_type: item.attachment_mime,
+                    size_bytes: item.attachment_size,
+                    id: item.attachment_id,
+                });
+                const attachmentPath = attachment?.storage_path || '';
+                const status = (item.outcome || item.notes || attachmentPath) ? 'Refertato' : 'In corso';
                 const statusClass = status === 'Refertato' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200';
                 const safeTitle = escapeHtml(item.title || `Accertamento ${invId}`);
-                const attachment = item.attachment_path ? `<a href="${escapeHtml(item.attachment_path)}" target="_blank" class="text-indigo-600 text-xs font-semibold underline">Apri referto</a>` : '<span class="text-xs text-slate-400">Nessun file</span>';
                 const outcomeVal = escapeHtml(item.outcome || '');
                 const notesVal = escapeHtml(item.notes || '');
+                const attachmentActions = attachmentPath
+                    ? `<a href="${escapeHtml(attachmentPath)}" target="_blank" rel="noreferrer" download class="inline-flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px] border border-indigo-100 hover:bg-indigo-100">
+                            <i data-lucide="download" class="w-3 h-3"></i> Apri/Scarica
+                        </a>`
+                    : '<span class="text-xs text-slate-400" data-role="inv-no-file">Nessun file</span>';
+                const attachmentSerialized = serializeAttachmentForInput(attachment);
+                const attachmentLabel = attachment?.original_name || (attachmentPath ? attachmentPath.split('/').pop() : '') || 'Nessun file selezionato';
                 return `<div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden" data-investigation-id="${invId}">
                     <button type="button" data-action="toggle-inv-card" data-target="${bodyId}" class="w-full flex items-start justify-between gap-3 px-4 py-3 hover:bg-slate-50 text-left">
                         <div>
@@ -799,18 +861,189 @@ function prefillInvestigations(selected = []) {
                                 </label>
                                 <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                                     URL/Path referto
-                                    <input type="text" class="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" data-field="attachment" value="${escapeHtml(item.attachment_path || '')}" placeholder="https://... o percorso file">
+                                    <div class="mt-1 space-y-2">
+                                        <div class="inv-dropzone drop-zone w-full border-2 border-dashed border-slate-200 rounded-lg bg-slate-50 text-slate-600 text-sm px-3 py-3 transition-all cursor-pointer flex items-center justify-between gap-3">
+                                            <div class="flex items-center gap-2">
+                                                <i data-lucide="upload" class="w-4 h-4 text-slate-500"></i>
+                                                <span data-role="inv-drop-label" class="text-xs font-medium">Trascina qui o clicca per caricare</span>
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <button type="button" class="text-xs font-bold text-indigo-600 hover:text-indigo-700" data-role="inv-browse">Sfoglia</button>
+                                                <button type="button" class="text-xs text-red-500 hover:text-red-600 flex items-center gap-1" data-role="inv-clear">
+                                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                                </button>
+                                            </div>
+                                            <input type="file" accept="application/pdf,image/png,image/jpeg" class="hidden" data-role="inv-file-input">
+                                        </div>
+                                        <input type="hidden" data-field="attachment" value="${escapeHtml(attachmentSerialized)}">
+                                        <div data-role="inv-hint" class="text-[11px] text-slate-500">${escapeHtml(attachmentLabel || 'Nessun file selezionato')}</div>
+                                    </div>
                                 </label>
                             </div>
                             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
                                 Note / Referto testuale
                                 <textarea rows="2" class="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" data-field="notes">${notesVal}</textarea>
                             </label>
-                            <div class="text-xs">${attachment}</div>
+                            <div class="text-xs flex items-center gap-3" data-role="inv-attachment-actions">
+                                ${attachmentActions}
+                            </div>
                         </div>
                     </div>
                 </div>`;
             }).join('');
+            lucide.createIcons();
+            initInvestigationDropzones();
+        }
+
+        function initInvestigationDropzones() {
+            const zones = document.querySelectorAll('.inv-dropzone');
+            zones.forEach((zone) => {
+                if (zone.dataset.bound === 'true') return;
+                zone.dataset.bound = 'true';
+                const fileInput = zone.querySelector('[data-role="inv-file-input"]');
+                const browseBtn = zone.querySelector('[data-role="inv-browse"]');
+                const label = zone.querySelector('[data-role="inv-drop-label"]');
+                const attachmentInput = zone.closest('.accordion-inner')?.querySelector('[data-field="attachment"]');
+                const hint = zone.closest('.accordion-inner')?.querySelector('[data-role="inv-hint"]');
+                const clearBtn = zone.querySelector('[data-role="inv-clear"]');
+                const actions = zone.closest('.accordion-inner')?.querySelector('[data-role="inv-attachment-actions"]');
+                if (!fileInput || !attachmentInput || !label) return;
+
+                const setAttachmentActions = (attachment) => {
+                    const path = attachment?.storage_path || '';
+                    const displayName = attachment?.original_name || (path ? path.split('/').pop() : '');
+                    if (!actions) return;
+                    const attachClickHandler = (container) => {
+                        container.querySelectorAll('a[data-role="inv-download"]').forEach((anchor) => {
+                            anchor.addEventListener('click', (e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!path) return;
+                                // Open in new tab
+                                window.open(path, '_blank', 'noopener');
+                                // Trigger download
+                                const dl = document.createElement('a');
+                                dl.href = path;
+                                dl.download = '';
+                                dl.rel = 'noreferrer';
+                                document.body.appendChild(dl);
+                                dl.click();
+                                document.body.removeChild(dl);
+                            });
+                        });
+                    };
+                    if (path) {
+                        const safePath = escapeHtml(path);
+                        actions.innerHTML = `<a href="${safePath}" target="_blank" rel="noreferrer" download class="inline-flex items-center gap-1 px-2 py-1 rounded bg-indigo-50 text-indigo-700 font-semibold text-[11px] border border-indigo-100 hover:bg-indigo-100" data-role="inv-download">
+                            <i data-lucide="download" class="w-3 h-3"></i> Apri/Scarica
+                        </a>`;
+                        if (hint) {
+                            hint.classList.remove('text-slate-500');
+                            hint.classList.add('text-indigo-700', 'font-semibold', 'text-[11px]');
+                            const hintLabel = escapeHtml(displayName || path);
+                            hint.innerHTML = `<a href="${safePath}" target="_blank" rel="noreferrer" download class="inline-flex items-center gap-1" data-role="inv-download">
+                                <i data-lucide="download" class="w-3 h-3"></i> ${hintLabel || 'Apri/Scarica'}
+                            </a>`;
+                        }
+                        attachClickHandler(actions);
+                        if (hint) attachClickHandler(hint);
+                    } else {
+                        actions.innerHTML = '<span class="text-xs text-slate-400" data-role="inv-no-file">Nessun file</span>';
+                        if (hint) {
+                            hint.classList.add('text-slate-500');
+                            hint.classList.remove('text-indigo-700', 'font-semibold');
+                            hint.textContent = 'Nessun file selezionato';
+                        }
+                    }
+                    lucide.createIcons();
+                };
+
+                const setValueFromFile = async (file) => {
+                    if (!file) return;
+                    const allowed = ['application/pdf', 'image/png', 'image/jpeg'];
+                    if (file.type && !allowed.includes(file.type)) { showToast('Tipo file non consentito'); return; }
+                    const maxSize = 5 * 1024 * 1024;
+                    if (file.size && file.size > maxSize) { showToast('File troppo grande (max 5MB)'); return; }
+                    zone.classList.add('opacity-70', 'pointer-events-none');
+                    try {
+                        const uploaded = await uploadAttachmentApi(file);
+                        const attachment = normalizeAttachmentObject(uploaded, {
+                            original_name: file.name,
+                            mime_type: file.type,
+                            size_bytes: file.size,
+                        });
+                        if (!attachment || !attachment.storage_path) {
+                            showToast('Upload fallito: percorso non disponibile');
+                            return;
+                        }
+                        attachmentInput.value = serializeAttachmentForInput(attachment);
+                        const displayName = attachment.original_name || file.name || 'File caricato';
+                        label.textContent = displayName;
+                        if (hint) hint.textContent = displayName;
+                        setAttachmentActions(attachment);
+                        if (clearBtn) clearBtn.classList.remove('opacity-50', 'pointer-events-none');
+                    } catch (err) {
+                        const msg = err?.message || 'Upload fallito';
+                        showToast(msg);
+                    } finally {
+                        zone.classList.remove('opacity-70', 'pointer-events-none');
+                    }
+                };
+
+                const clearValue = () => {
+                    attachmentInput.value = '';
+                    fileInput.value = '';
+                    label.textContent = 'Trascina qui o clicca per caricare';
+                    if (hint) hint.textContent = 'Nessun file selezionato';
+                    if (clearBtn) clearBtn.classList.add('opacity-50', 'pointer-events-none');
+                    setAttachmentActions(null);
+                };
+
+                if (clearBtn) {
+                    const hasFile = (attachmentInput.value || '').trim().length > 0;
+                    if (!hasFile) clearBtn.classList.add('opacity-50', 'pointer-events-none');
+                    clearBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        clearValue();
+                    });
+                }
+
+                const existingAttachment = normalizeAttachmentObject(parseAttachmentPayload(attachmentInput.value));
+                const existingPath = existingAttachment?.storage_path || '';
+                if (existingPath) {
+                    const shortName = existingAttachment?.original_name || existingPath.split('/').pop() || existingPath;
+                    label.textContent = shortName;
+                    if (hint) hint.textContent = shortName;
+                    if (clearBtn) clearBtn.classList.remove('opacity-50', 'pointer-events-none');
+                    setAttachmentActions(existingAttachment);
+                }
+
+                ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+                    zone.addEventListener(eventName, (ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (eventName === 'dragenter' || eventName === 'dragover') zone.classList.add('drag-over');
+                        if (eventName === 'dragleave' || eventName === 'drop') zone.classList.remove('drag-over');
+                    });
+                });
+
+                zone.addEventListener('drop', (e) => {
+                    const file = e.dataTransfer?.files?.[0];
+                    setValueFromFile(file);
+                });
+
+                zone.addEventListener('click', () => fileInput.click());
+                if (browseBtn) {
+                    browseBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        fileInput.click();
+                    });
+                }
+                fileInput.addEventListener('change', (e) => {
+                    const file = e.target.files?.[0];
+                    setValueFromFile(file);
+                });
+            });
         }
 
         function openInvestigationsModal(id) {
@@ -820,7 +1053,6 @@ function prefillInvestigations(selected = []) {
             const nameEl = document.getElementById('inv-patient-name');
             if (nameEl) nameEl.innerText = a.paziente_nome || '--';
             renderInvestigationsRows(a);
-            lucide.createIcons();
             const bodies = document.querySelectorAll('#investigations-rows .accordion-body');
             bodies.forEach((body) => {
                 body.classList.remove('open');
@@ -844,12 +1076,13 @@ function prefillInvestigations(selected = []) {
                 const invId = parseInt(card.dataset.investigationId, 10);
                 const outcome = card.querySelector('[data-field="outcome"]')?.value?.trim() || null;
                 const notes = card.querySelector('[data-field="notes"]')?.value?.trim() || null;
-                const attachment = card.querySelector('[data-field="attachment"]')?.value?.trim() || null;
+                const attachmentRaw = card.querySelector('[data-field="attachment"]')?.value?.trim() || '';
+                const attachment = normalizeAttachmentObject(parseAttachmentPayload(attachmentRaw));
                 return {
                     investigation_id: invId,
                     outcome,
                     notes,
-                    attachment_path: attachment
+                    attachment
                 };
             }).filter((item) => Number.isInteger(item.investigation_id) && item.investigation_id > 0);
 

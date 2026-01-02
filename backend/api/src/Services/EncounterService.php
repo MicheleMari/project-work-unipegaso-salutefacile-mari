@@ -213,7 +213,7 @@ class EncounterService
                         'investigation_id' => $invId,
                         'outcome' => $item['outcome'] ?? null,
                         'notes' => $item['notes'] ?? null,
-                        'attachment_path' => $item['attachment_path'] ?? null,
+                        'attachment' => $this->normalizeAttachmentPayload($item),
                     ];
                 } else {
                     $invId = (int) $item;
@@ -362,6 +362,39 @@ class EncounterService
             throw new HttpException('Invalid value', 422);
         }
         return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $item
+     * @return array<string, mixed>|null
+     */
+    private function normalizeAttachmentPayload(array $item): ?array
+    {
+        $payload = $item['attachment'] ?? null;
+        if (!is_array($payload) && !empty($item['attachment_path'])) {
+            $payload = [
+                'storage_path' => $item['attachment_path'],
+                'original_name' => $item['attachment_name'] ?? null,
+                'mime_type' => $item['attachment_mime'] ?? null,
+                'size_bytes' => $item['attachment_size'] ?? null,
+            ];
+        }
+
+        if (!is_array($payload)) {
+            return null;
+        }
+
+        $storagePath = trim((string) ($payload['storage_path'] ?? $payload['path'] ?? ''));
+        if ($storagePath === '') {
+            return null;
+        }
+
+        return [
+            'storage_path' => $storagePath,
+            'original_name' => $payload['original_name'] ?? $payload['filename'] ?? null,
+            'mime_type' => $payload['mime_type'] ?? $payload['mime'] ?? null,
+            'size_bytes' => $payload['size_bytes'] ?? $payload['size'] ?? null,
+        ];
     }
 
     private function currentUser(): array

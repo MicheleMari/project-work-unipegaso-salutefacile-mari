@@ -24,6 +24,28 @@ function request(path, options = {}) {
     });
 }
 
+function normalizeAttachmentPayload(raw = {}) {
+    const source = typeof raw === 'object' ? raw : {};
+    const storagePathRaw = source.storage_path ?? source.path ?? source.attachment_path ?? source.attachmentUrl ?? '';
+    const storagePath = typeof storagePathRaw === 'string' ? storagePathRaw.trim() : String(storagePathRaw || '').trim();
+    if (!storagePath) {
+        if (typeof raw === 'string') {
+            const trimmed = raw.trim();
+            return trimmed ? { storage_path: trimmed } : null;
+        }
+        return null;
+    }
+    const sizeRaw = source.size_bytes ?? source.size ?? null;
+    const sizeBytes = Number.isFinite(sizeRaw) ? Number(sizeRaw) : (sizeRaw ? parseInt(sizeRaw, 10) : null);
+    return {
+        id: source.id ?? source.attachment_id ?? null,
+        storage_path: storagePath,
+        original_name: source.original_name ?? source.filename ?? source.name ?? null,
+        mime_type: source.mime_type ?? source.mime ?? null,
+        size_bytes: sizeBytes,
+    };
+}
+
 function normalizePayload(payload = {}) {
     // Accetta payload legacy (paziente_nome, cf, data_visita, stato, priorita, parametri, dottore, indirizzo, citta, telefono, email)
     // e lo adatta al nuovo contratto { patient: {...}, encounter: {...} }
@@ -67,11 +89,18 @@ function normalizePayload(payload = {}) {
                 if (val && typeof val === 'object') {
                     const invId = parseInt(val.investigation_id ?? val.id ?? 0, 10);
                     if (!Number.isInteger(invId) || invId <= 0) return null;
+                    const attachmentSource = val.attachment ?? {
+                        attachment_path: val.attachment_path ?? val.attachmentUrl ?? null,
+                        original_name: val.attachment_name ?? null,
+                        mime_type: val.attachment_mime ?? null,
+                        size_bytes: val.attachment_size ?? null,
+                    };
+                    const attachment = normalizeAttachmentPayload(attachmentSource);
                     return {
                         investigation_id: invId,
                         outcome: val.outcome ?? null,
                         notes: val.notes ?? null,
-                        attachment_path: val.attachment_path ?? val.attachmentUrl ?? null,
+                        attachment,
                     };
                 }
                 return null;
@@ -93,6 +122,16 @@ function normalizePayload(payload = {}) {
 
 function toLegacy(encounter = {}) {
     const patient = encounter.patient || {};
+    const investigations = Array.isArray(encounter.investigations)
+        ? encounter.investigations.map((inv) => {
+            const attachment = normalizeAttachmentPayload(inv.attachment ?? inv);
+            return {
+                ...inv,
+                attachment,
+                attachment_path: attachment?.storage_path || inv.attachment_path || null,
+            };
+        })
+        : [];
     return {
         id: encounter.id,
         paziente_nome: patient.full_name || '',
@@ -110,7 +149,7 @@ function toLegacy(encounter = {}) {
         telefono: patient.phone || null,
         email: patient.email || null,
         referto: encounter.notes ? { esito: encounter.notes, terapia: '', allegati: [] } : null,
-        investigations: Array.isArray(encounter.investigations) ? encounter.investigations : [],
+        investigations,
     };
 }
 
@@ -135,10 +174,29 @@ export async function deleteAppointmentApi(id) {
     return request(`${RESOURCE}/${id}`, { method: 'DELETE' });
 }
 
+export async function uploadAttachmentApi(file) {
+    const tokenHeaders = authHeaders();
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE}/ps/uploads`, {
+        method: 'POST',
+        headers: { ...tokenHeaders },
+        body: formData,
+    });
+    const text = await res.text();
+    if (!res.ok) {
+        const message = text || `Upload fallito (HTTP ${res.status})`;
+        throw new Error(message);
+    }
+    const json = JSON.parse(text || '{}');
+    return json.data ?? json;
+}
+
 // mantenuta compatibilità con export default
 export default {
     fetchAppointmentsFromApi,
     createAppointmentApi,
     updateAppointmentApi,
+    uploadAttachmentApi,
     deleteAppointmentApi,
 };

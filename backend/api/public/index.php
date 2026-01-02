@@ -9,6 +9,7 @@ use App\Controllers\AuthController;
 use App\Controllers\AppointmentController;
 use App\Controllers\EncounterController;
 use App\Controllers\ReferenceController;
+use App\Controllers\UploadController;
 use App\Http\Request;
 use App\Http\Response;
 
@@ -24,6 +25,7 @@ $router = new Router(Config::get('app.base_path', ''));
 $auth = new AuthController();
 $encounters = new EncounterController();
 $references = new ReferenceController();
+$uploads = new UploadController();
 
 $router->get('/health', fn () => Response::json(['status' => 'ok', 'timestamp' => date(DATE_ATOM)]), ['rate_limit' => ['max' => 30]]);
 $router->post('/auth/login', [$auth, 'login'], ['rate_limit' => ['max' => 30]]);
@@ -40,5 +42,6 @@ $router->delete('/ps/encounters/{id}', [$encounters, 'destroy'], $protected);
 $router->get('/references/departments', [$references, 'departments'], ['roles' => ['operatore', 'dottore', 'admin']]);
 $router->get('/references/cadastral', [$references, 'cadastral'], ['roles' => ['operatore', 'dottore', 'admin']]);
 $router->get('/references/investigations', [$references, 'investigations'], ['roles' => ['operatore', 'dottore', 'admin']]);
+$router->post('/ps/uploads', [$uploads, 'store'], $protected);
 
 $router->dispatch(Request::fromGlobals());

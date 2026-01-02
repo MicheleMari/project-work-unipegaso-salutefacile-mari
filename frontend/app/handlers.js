@@ -358,6 +358,17 @@ function handleActionClick(event) {
         case 'select-option':
             selectCustomOption(target.dataset.select, target.dataset.value, target.dataset.display);
             break;
+        case 'open-priority-popup':
+            event.stopPropagation();
+            openPriorityPopup(parseInt(target.dataset.id, 10));
+            break;
+        case 'set-priority':
+            event.stopPropagation();
+            updatePriority(parseInt(target.dataset.id, 10), target.dataset.value);
+            break;
+        case 'close-priority-popup':
+            closePriorityPopup();
+            break;
         case 'open-patient':
             openPatientDetails(parseInt(target.dataset.id, 10));
             break;
@@ -750,10 +761,17 @@ function prefillInvestigations(selected = []) {
         const valOrEmpty = (inputId) => document.getElementById(inputId)?.value || '';
         const vitals = `PA:${valOrEmpty('v_pa')} FC:${valOrEmpty('v_fc')} SpO2:${valOrEmpty('v_spo2')} TC:${valOrEmpty('v_tc')}`;
         const existing = state.appointments.find(x => x.id === id);
-        const payload = { stato: 'Accertamenti Richiesti', priorita: existing?.priorita || 'green', parametri: `${vitals} | Esami: ${exams}`, investigations: investigationIds };
+        const currentPriority = existing?.priorita || 'green';
+        const payload = { stato: 'Accertamenti Richiesti', priorita: currentPriority, parametri: `${vitals} | Esami: ${exams}`, investigations: investigationIds };
         let updated;
         try {
             const saved = await updateAppointmentApi(id, payload);
+            // preserva il codice triage in caso il backend restituisca un default
+            if (saved && saved.priorita && currentPriority && saved.priorita !== currentPriority) {
+                saved.priorita = currentPriority;
+            } else if (saved && !saved.priorita) {
+                saved.priorita = currentPriority;
+            }
             updated = updateAppointment(id, saved);
         } catch (error) {
                 console.warn('Triage update offline:', error);
@@ -1208,6 +1226,75 @@ function prefillInvestigations(selected = []) {
                 showToast('Backend non raggiungibile, salvataggio locale');
             }
             if(updated){ closeModal('visit-assignment-modal'); renderTable(); showToast(`Richiamo visita specialistica: ${spec}`); }
+        }
+        async function updatePriority(id, value) {
+            const allowed = ['red', 'orange', 'green', 'white'];
+            if (!allowed.includes(value)) { showToast('Codice non valido'); return; }
+            const payload = { priorita: value };
+            let updated;
+            try {
+                const saved = await updateAppointmentApi(id, payload);
+                updated = updateAppointment(id, saved);
+            } catch (error) {
+                console.warn('Priority update offline:', error);
+                updated = updateAppointment(id, payload);
+                showToast('Backend non raggiungibile, salvataggio locale');
+            }
+            if (updated) {
+                renderTable();
+                updateKPIs();
+                showToast(`Codice aggiornato: ${value.toUpperCase()}`);
+            }
+        }
+        function closePriorityPopup() {
+            document.querySelectorAll('[data-role="priority-overlay"]').forEach((el) => el.remove());
+        }
+        function openPriorityPopup(id) {
+            const app = state.appointments.find((a) => a.id === id);
+            if (!app) return;
+            closePriorityPopup();
+            const map = {
+                red: { label: 'Rosso', from: 'from-red-600', to: 'to-rose-600', dot: 'bg-red-500' },
+                orange: { label: 'Arancione', from: 'from-amber-500', to: 'to-orange-500', dot: 'bg-orange-500' },
+                green: { label: 'Verde', from: 'from-emerald-600', to: 'to-teal-600', dot: 'bg-emerald-500' },
+                white: { label: 'Bianco', from: 'from-slate-100', to: 'to-slate-300', dot: 'bg-slate-400' },
+            };
+            const overlay = document.createElement('div');
+            overlay.dataset.role = 'priority-overlay';
+            overlay.className = 'fixed inset-0 z-40 bg-slate-900/30 backdrop-blur-sm flex items-center justify-center px-4';
+            const cards = Object.entries(map).map(([value, meta]) => `
+                <button data-action="set-priority" data-id="${id}" data-value="${value}"
+                    class="w-full flex items-center justify-between px-4 py-3 rounded-xl bg-white hover:shadow-lg transition-all border border-slate-100">
+                    <div class="flex items-center gap-3">
+                        <span class="w-9 h-9 rounded-full bg-gradient-to-r ${meta.from} ${meta.to} flex items-center justify-center shadow-sm">
+                            <span class="w-2 h-2 rounded-full bg-white/90"></span>
+                        </span>
+                        <span class="text-sm font-bold text-slate-800">${meta.label}</span>
+                    </div>
+                    <span class="text-[11px] font-bold uppercase tracking-wide text-slate-400">Seleziona</span>
+                </button>
+            `).join('');
+            overlay.innerHTML = `
+                <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-4 relative ring-1 ring-slate-100">
+                    <div class="flex items-start justify-between mb-3">
+                        <div>
+                            <p class="text-[10px] uppercase tracking-[0.2em] text-slate-400">Codice Priorità</p>
+                            <p class="text-lg font-bold text-slate-900 leading-tight">Modifica per ${escapeHtml(app.paziente_nome || 'Paziente')}</p>
+                        </div>
+                        <button data-action="close-priority-popup" class="text-slate-400 hover:text-slate-600" aria-label="Chiudi">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-2">${cards}</div>
+                </div>
+            `;
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) {
+                    closePriorityPopup();
+                }
+            });
+            document.body.appendChild(overlay);
+            if (window.lucide) window.lucide.createIcons();
         }
         function openNewReportModal(id) { 
             const a=state.appointments.find(x=>x.id===id); 

@@ -46,7 +46,7 @@ function normalizeAttachmentPayload(raw = {}) {
     };
 }
 
-function normalizePayload(payload = {}) {
+function normalizePayload(payload = {}, { applyDefaults = false } = {}) {
     // Accetta payload legacy (paziente_nome, cf, data_visita, stato, priorita, parametri, dottore, indirizzo, citta, telefono, email)
     // e lo adatta al nuovo contratto { patient: {...}, encounter: {...} }
     const fullName = payload.paziente_nome ?? payload.full_name ?? '';
@@ -72,12 +72,15 @@ function normalizePayload(payload = {}) {
     };
 
     const encounter = {
-        arrival_at: payload.data_visita ?? payload.arrival_at ?? new Date().toISOString(),
-        state: payload.stato ?? payload.state ?? 'Registrato',
-        priority: payload.priorita ?? payload.priority ?? 'green',
+        arrival_at: payload.data_visita ?? payload.arrival_at ?? (applyDefaults ? new Date().toISOString() : undefined),
+        state: payload.stato ?? payload.state ?? (applyDefaults ? 'Registrato' : undefined),
         symptoms: payload.parametri ?? payload.symptoms ?? payload.reason ?? null,
         notes: payload.notes ?? null,
     };
+    // Non sovrascrivere il codice priorità esistente se non è stato esplicitamente passato
+    if (Object.prototype.hasOwnProperty.call(payload, 'priorita') || Object.prototype.hasOwnProperty.call(payload, 'priority') || applyDefaults) {
+        encounter.priority = payload.priorita ?? payload.priority ?? (applyDefaults ? 'green' : undefined);
+    }
 
     const investigations = Array.isArray(payload.investigations)
         ? payload.investigations
@@ -159,13 +162,13 @@ export async function fetchAppointmentsFromApi() {
 }
 
 export async function createAppointmentApi(payload) {
-    const body = normalizePayload(payload);
+    const body = normalizePayload(payload, { applyDefaults: true });
     const saved = await request(RESOURCE, { method: 'POST', body: JSON.stringify(body) });
     return toLegacy(saved);
 }
 
 export async function updateAppointmentApi(id, payload, method = 'PATCH') {
-    const body = normalizePayload(payload);
+    const body = normalizePayload(payload, { applyDefaults: false });
     const saved = await request(`${RESOURCE}/${id}`, { method, body: JSON.stringify(body) });
     return toLegacy(saved);
 }

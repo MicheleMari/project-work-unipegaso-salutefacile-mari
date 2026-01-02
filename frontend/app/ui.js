@@ -1,6 +1,52 @@
 import { state } from '../state/appState.js';
 import { safeText, escapeHtml } from '../utils/sanitize.js';
 
+const priorityMeta = {
+    red: {
+        label: 'Rosso',
+        badge: 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-sm',
+        menu: 'hover:ring-red-100',
+        dot: 'bg-red-500',
+    },
+    orange: {
+        label: 'Arancione',
+        badge: 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-sm',
+        menu: 'hover:ring-amber-100',
+        dot: 'bg-orange-500',
+    },
+    green: {
+        label: 'Verde',
+        badge: 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm',
+        menu: 'hover:ring-emerald-100',
+        dot: 'bg-emerald-500',
+    },
+    white: {
+        label: 'Bianco',
+        badge: 'bg-gradient-to-r from-slate-100 to-slate-200 text-slate-700 border border-slate-200 shadow-sm',
+        menu: 'hover:ring-slate-100',
+        dot: 'bg-slate-400',
+    },
+};
+
+function renderPrioritySelector(app, { compact = false } = {}) {
+    const meta = priorityMeta[app.priorita] || priorityMeta.green;
+    const buttonClasses = compact ? 'px-2 py-1.5 text-[11px]' : 'px-3 py-2 text-xs';
+
+    return `
+        <div class="relative priority-selector inline-block" data-id="${escapeHtml(app.id)}">
+            <button type="button" data-action="open-priority-popup" data-id="${escapeHtml(app.id)}"
+                class="flex items-center gap-2 rounded-full border border-slate-200 bg-white text-slate-800 font-bold shadow-sm hover:shadow-md hover:border-slate-300 transition-all duration-150 ${buttonClasses}">
+                <span class="px-2 py-0.5 rounded-full ${meta.badge} flex items-center gap-1">
+                    <span class="w-2 h-2 rounded-full bg-white/80"></span>
+                    ${meta.label}
+                </span>
+                <span class="text-[11px] uppercase tracking-wide text-slate-400">Cambia</span>
+                <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 transition-transform"></i>
+            </button>
+        </div>
+    `;
+}
+
 export function updateWaitTimeBar(color, minutes, max) {
     const el = document.getElementById(`kpi-wait-${color}`);
     const bar = document.getElementById(`kpi-bar-${color}`);
@@ -109,12 +155,6 @@ export function renderTable() {
         else if (app.stato === 'Ricoverato') badgeClass = 'bg-red-100 text-red-800 border border-red-200';
         else if (app.stato === 'Dimesso') badgeClass = 'bg-green-50 text-green-800 border border-green-200';
 
-        let priorityHtml = '';
-        const pMap = { 'red': { l: 'Rosso', c: 'bg-red-600 text-white' }, 'orange': { l: 'Arancione', c: 'bg-orange-500 text-white' }, 'green': { l: 'Verde', c: 'bg-green-600 text-white' }, 'white': { l: 'Bianco', c: 'bg-slate-200 text-slate-600 border border-slate-300' } };
-        if (pMap[app.priorita]) {
-            priorityHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${pMap[app.priorita].c} mr-2">${pMap[app.priorita].l}</span>`;
-        }
-
         let actions = '';
         if (app.stato === 'Registrato') actions = `<button data-action="open-triage" data-id="${safeId}" class="w-full bg-blue-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-blue-700 shadow-sm">Accertamenti Preventivi</button>`;
         else if (app.stato === 'Accertamenti Richiesti') actions = `<button data-action="open-visit" data-id="${safeId}" class="w-full bg-amber-500 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-amber-600 shadow-sm">Richiama Specialista</button>`;
@@ -133,7 +173,7 @@ export function renderTable() {
                 <div data-action="open-patient" data-id="${safeId}" class="font-bold text-slate-900 cursor-pointer hover:text-medical-600 hover:underline transition-colors decoration-medical-500 decoration-2 underline-offset-2 sensitive-data" title="Apri anagrafica">${safeName}</div>
                 <div class="text-xs text-slate-400 font-mono">ID: ${safeId}</div>
             </td>
-            <td class="px-6 py-4 align-top">${priorityHtml}<div class="text-xs text-slate-500 mt-1">${safeParams}</div></td>
+            <td class="px-6 py-4 align-top">${renderPrioritySelector(app)}<div class="text-xs text-slate-500 mt-1">${safeParams}</div></td>
             <td class="px-6 py-4 align-top text-sm">
                 <button data-action="show-assignment" data-id="${safeId}" class="text-xs font-bold px-2 py-1 rounded-full border border-slate-200 bg-slate-50 hover:bg-slate-100 transition">
                     ${app.doctor_department ? 'Specialista' : 'Pronto Soccorso'}
@@ -173,7 +213,7 @@ export function renderTable() {
                 </div>
 
                 <div class="flex flex-col items-end gap-1.5">
-                    ${priorityHtml}
+                    ${renderPrioritySelector(app, { compact: true })}
                     <div class="flex items-center gap-1 text-slate-400">
                         ${app.stato === 'Accertamenti Richiesti'
                             ? `<button data-action="open-investigations" data-id="${safeId}" class="text-[10px] font-bold uppercase tracking-wider underline decoration-indigo-500 decoration-2">${safeState}</button>`

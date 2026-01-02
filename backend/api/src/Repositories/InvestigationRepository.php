@@ -56,24 +56,46 @@ class InvestigationRepository
      *
      * @param int[] $investigationIds
      */
-    public function syncPerformed(int $encounterId, array $investigationIds, ?int $userId = null): void
+    public function syncPerformed(int $encounterId, array $investigations, ?int $userId = null): void
     {
-        $ids = array_values(array_unique(array_filter(array_map('intval', $investigationIds), fn ($id) => $id > 0)));
+        $items = [];
+        foreach ($investigations as $item) {
+            if (is_array($item)) {
+                $invId = isset($item['investigation_id']) ? (int) $item['investigation_id'] : 0;
+                if ($invId <= 0) {
+                    continue;
+                }
+                $items[] = [
+                    'investigation_id' => $invId,
+                    'outcome' => $item['outcome'] ?? null,
+                    'notes' => $item['notes'] ?? null,
+                    'attachment_path' => $item['attachment_path'] ?? null,
+                ];
+            } else {
+                $invId = (int) $item;
+                if ($invId > 0) {
+                    $items[] = ['investigation_id' => $invId, 'outcome' => null, 'notes' => null, 'attachment_path' => null];
+                }
+            }
+        }
         $this->pdo->beginTransaction();
         try {
             $delete = $this->pdo->prepare('DELETE FROM investigations_performed WHERE emergency_id = :encounter_id');
             $delete->execute(['encounter_id' => $encounterId]);
 
-            if (!empty($ids)) {
+            if (!empty($items)) {
                 $insert = $this->pdo->prepare(
-                    'INSERT INTO investigations_performed (emergency_id, investigation_id, performed_by) 
-                     VALUES (:encounter_id, :investigation_id, :performed_by)'
+                    'INSERT INTO investigations_performed (emergency_id, investigation_id, performed_by, outcome, notes, attachment_path) 
+                     VALUES (:encounter_id, :investigation_id, :performed_by, :outcome, :notes, :attachment_path)'
                 );
-                foreach ($ids as $id) {
+                foreach ($items as $item) {
                     $insert->execute([
                         'encounter_id' => $encounterId,
-                        'investigation_id' => $id,
+                        'investigation_id' => $item['investigation_id'],
                         'performed_by' => $userId ?: 1,
+                        'outcome' => $item['outcome'] ?? null,
+                        'notes' => $item['notes'] ?? null,
+                        'attachment_path' => $item['attachment_path'] ?? null,
                     ]);
                 }
             }

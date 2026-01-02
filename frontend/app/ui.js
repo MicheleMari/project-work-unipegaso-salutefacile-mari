@@ -144,7 +144,12 @@ export function renderTable() {
                 ${new Date(app.data_visita).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 <div class="mt-1">${alertIcon}</div>
             </td>
-            <td class="px-6 py-4 align-top text-center"><span class="inline-block px-2 py-1 rounded text-xs font-bold ${badgeClass}">${safeState}</span></td>
+            <td class="px-6 py-4 align-top text-center">
+                ${app.stato === 'Accertamenti Richiesti'
+                    ? `<button data-action="open-investigations" data-id="${safeId}" class="inline-block px-2 py-1 rounded text-xs font-bold ${badgeClass} hover:shadow-sm transition">` +
+                      `${safeState}</button>`
+                    : `<span class="inline-block px-2 py-1 rounded text-xs font-bold ${badgeClass}">${safeState}</span>`}
+            </td>
             <td class="px-6 py-4 align-top text-right w-[160px]">${actions}</td>
         `;
         tbody.appendChild(tr);
@@ -170,7 +175,9 @@ export function renderTable() {
                 <div class="flex flex-col items-end gap-1.5">
                     ${priorityHtml}
                     <div class="flex items-center gap-1 text-slate-400">
-                        <span class="text-[10px] font-bold uppercase tracking-wider">${safeState}</span>
+                        ${app.stato === 'Accertamenti Richiesti'
+                            ? `<button data-action="open-investigations" data-id="${safeId}" class="text-[10px] font-bold uppercase tracking-wider underline decoration-indigo-500 decoration-2">${safeState}</button>`
+                            : `<span class="text-[10px] font-bold uppercase tracking-wider">${safeState}</span>`}
                         <i id="chevron-${safeId}" data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-300"></i>
                     </div>
                 </div>

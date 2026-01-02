@@ -70,6 +70,27 @@ body.privacy-active .sensitive-data:hover {
     box-shadow: inset 0 0 0 2px #fff;
 }
 
+/* Accordion transizioni */
+.accordion-body {
+    transition: max-height 0.28s ease, opacity 0.24s ease;
+    max-height: 0;
+    opacity: 0;
+    overflow: hidden;
+    pointer-events: none;
+    visibility: hidden;
+    border-top-width: 0 !important;
+}
+.accordion-body.open {
+    opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    border-top-width: 1px !important;
+}
+.accordion-inner {
+    padding-top: 0.5rem;
+    padding-bottom: 1rem;
+}
+
 /* Brand primary button */
 .sf-primary-btn {
     background: linear-gradient(135deg, #0369a1, #0284c7) !important;

@@ -201,8 +201,29 @@ class EncounterService
             return;
         }
         $userId = isset($user['id']) ? (int) $user['id'] : null;
-        $investigationIds = is_array($rawInvestigations) ? $rawInvestigations : [];
-        $this->investigations->syncPerformed($encounterId, $investigationIds, $userId);
+        $investigations = [];
+        if (is_array($rawInvestigations)) {
+            foreach ($rawInvestigations as $item) {
+                if (is_array($item)) {
+                    $invId = (int) ($item['investigation_id'] ?? $item['id'] ?? 0);
+                    if ($invId <= 0) {
+                        continue;
+                    }
+                    $investigations[] = [
+                        'investigation_id' => $invId,
+                        'outcome' => $item['outcome'] ?? null,
+                        'notes' => $item['notes'] ?? null,
+                        'attachment_path' => $item['attachment_path'] ?? null,
+                    ];
+                } else {
+                    $invId = (int) $item;
+                    if ($invId > 0) {
+                        $investigations[] = ['investigation_id' => $invId];
+                    }
+                }
+            }
+        }
+        $this->investigations->syncPerformed($encounterId, $investigations, $userId);
     }
 
     private function validatePatient(array $data, bool $isCreate): array

@@ -259,6 +259,31 @@ export const modals = () => `
         </div>
     </div>
 
+    <!-- INVESTIGATIONS STATUS MODAL -->
+    <div id="investigations-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none no-print">
+        <div class="pointer-events-auto bg-white rounded-xl w-full max-w-3xl border border-slate-200 flex flex-col max-h-[90vh] transform scale-95 transition-all shadow-2xl">
+            <div class="bg-indigo-600 p-6 flex justify-between items-center shrink-0 rounded-t-xl text-white">
+                <div>
+                    <h3 class="text-xl font-bold">Accertamenti Richiesti</h3>
+                    <p class="text-indigo-100 text-sm">Stato accertamenti per <span id="inv-patient-name" class="font-semibold sensitive-data">--</span></p>
+                </div>
+                <button data-action="close-modal" data-modal="investigations-modal" class="text-white/80 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <form id="investigations-form" data-role="investigations-form" class="p-6 space-y-4 overflow-y-auto bg-white rounded-b-xl">
+                <input type="hidden" id="inv_encounter_id">
+                <div id="investigations-rows" class="space-y-3">
+                    <div class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">Nessun accertamento registrato per questo paziente.</div>
+                </div>
+                <div class="pt-4 flex justify-end gap-3 border-t border-slate-100">
+                    <button type="button" data-action="close-modal" data-modal="investigations-modal" class="px-5 py-2.5 text-slate-600 hover:bg-slate-100 rounded-lg text-sm font-medium">Chiudi</button>
+                    <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold shadow-lg flex items-center gap-2">
+                        <i data-lucide="save" class="w-4 h-4"></i> Salva
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- VISIT ASSIGNMENT MODAL -->
     <div id="visit-assignment-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 hidden pointer-events-none no-print">
         <div class="pointer-events-auto bg-white rounded-xl w-full max-w-md shadow-2xl border border-slate-200 flex flex-col transform scale-95 transition-all">

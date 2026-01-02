@@ -120,6 +120,10 @@ function bindUIEvents() {
     if (triageForm) {
         triageForm.addEventListener('submit', handleTriageSubmit);
     }
+    const investigationsForm = document.getElementById('investigations-form');
+    if (investigationsForm) {
+        investigationsForm.addEventListener('submit', handleInvestigationsSubmit);
+    }
 
     const newReportForm = document.querySelector('[data-role="new-report-form"]');
     if (newReportForm) {
@@ -285,6 +289,47 @@ function handleActionClick(event) {
         case 'open-stats':
             openStatsModal();
             break;
+        case 'open-investigations':
+            openInvestigationsModal(parseInt(target.dataset.id, 10));
+            break;
+        case 'toggle-inv-card': {
+            const bodyId = target.dataset.target;
+            const body = bodyId ? document.getElementById(bodyId) : null;
+            if (body) {
+                const isOpen = body.classList.contains('open');
+                const content = body.querySelector('.accordion-inner') || body;
+                if (isOpen) {
+                    const currentHeight = content.scrollHeight;
+                    body.style.maxHeight = `${currentHeight}px`;
+                    requestAnimationFrame(() => {
+                        body.classList.remove('open');
+                        body.style.maxHeight = '0px';
+                    });
+                    body.addEventListener('transitionend', () => {
+                        body.style.maxHeight = '0px';
+                    }, { once: true });
+                } else {
+                    const startHidden = body.style.maxHeight === '' || body.style.maxHeight === '0px';
+                    if (startHidden) {
+                        body.style.maxHeight = '0px';
+                    }
+                    body.classList.add('open');
+                    const targetHeight = content.scrollHeight || content.offsetHeight || body.scrollHeight;
+                    requestAnimationFrame(() => { body.style.maxHeight = `${targetHeight}px`; });
+                    body.addEventListener('transitionend', () => {
+                        if (body.classList.contains('open')) {
+                            body.style.maxHeight = '';
+                        }
+                    }, { once: true });
+                }
+                const icon = target.querySelector('[data-lucide], svg.lucide');
+                if (icon) {
+                    icon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+                    icon.style.transition = 'transform 0.25s ease';
+                }
+            }
+            break;
+        }
         case 'toggle-kpi':
             toggleKPICard(target.dataset.kpi);
             break;
@@ -702,7 +747,8 @@ function prefillInvestigations(selected = []) {
         const selectedExams = [...form.querySelectorAll('input[name=\"exams\"]:checked')];
         const exams = selectedExams.map((el) => el.dataset.label || el.value).join(', ') || 'Nessuno';
         const investigationIds = selectedExams.map((el) => parseInt(el.value, 10)).filter((val) => Number.isInteger(val) && val > 0);
-        const vitals = `PA:${document.getElementById('v_pa').value} FC:${document.getElementById('v_fc').value} SpO2:${document.getElementById('v_spo2').value} TC:${document.getElementById('v_tc').value}`;
+        const valOrEmpty = (inputId) => document.getElementById(inputId)?.value || '';
+        const vitals = `PA:${valOrEmpty('v_pa')} FC:${valOrEmpty('v_fc')} SpO2:${valOrEmpty('v_spo2')} TC:${valOrEmpty('v_tc')}`;
         const existing = state.appointments.find(x => x.id === id);
         const payload = { stato: 'Accertamenti Richiesti', priorita: existing?.priorita || 'green', parametri: `${vitals} | Esami: ${exams}`, investigations: investigationIds };
         let updated;
@@ -715,6 +761,118 @@ function prefillInvestigations(selected = []) {
                 showToast('Backend non raggiungibile, salvataggio locale');
             }
             if (updated) { closeModal('triage-modal'); filterTable('all'); showToast('Codice assegnato, accertamenti richiesti e parametri registrati'); updateKPIs(); } 
+        }
+        function renderInvestigationsRows(a) {
+            const container = document.getElementById('investigations-rows');
+            if (!container) return;
+            const items = Array.isArray(a?.investigations) ? a.investigations : [];
+            if (!items.length) {
+                container.innerHTML = '<div class="text-sm text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3">Nessun accertamento registrato per questo paziente.</div>';
+                return;
+            }
+            container.innerHTML = items.map((item, idx) => {
+                const invId = item.investigation_id || item.id || idx + 1;
+                const bodyId = `inv-body-${invId}`;
+                const status = (item.outcome || item.notes || item.attachment_path) ? 'Refertato' : 'In corso';
+                const statusClass = status === 'Refertato' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200';
+                const safeTitle = escapeHtml(item.title || `Accertamento ${invId}`);
+                const attachment = item.attachment_path ? `<a href="${escapeHtml(item.attachment_path)}" target="_blank" class="text-indigo-600 text-xs font-semibold underline">Apri referto</a>` : '<span class="text-xs text-slate-400">Nessun file</span>';
+                const outcomeVal = escapeHtml(item.outcome || '');
+                const notesVal = escapeHtml(item.notes || '');
+                return `<div class="rounded-lg border border-slate-200 bg-white shadow-sm overflow-hidden" data-investigation-id="${invId}">
+                    <button type="button" data-action="toggle-inv-card" data-target="${bodyId}" class="w-full flex items-start justify-between gap-3 px-4 py-3 hover:bg-slate-50 text-left">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h4 class="font-bold text-slate-800 text-sm">${safeTitle}</h4>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 transition-transform" aria-hidden="true"></i>
+                            </div>
+                            <p class="text-xs text-slate-500">${escapeHtml(item.description || '')}</p>
+                        </div>
+                        <span class="px-2 py-1 rounded text-[11px] font-bold ${statusClass} shrink-0">${status}</span>
+                    </button>
+                    <div id="${bodyId}" class="accordion-body">
+                        <div class="accordion-inner px-4 pb-4 pt-2 space-y-3 border-t border-slate-100">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    Esito sintetico
+                                    <input type="text" class="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" data-field="outcome" value="${outcomeVal}">
+                                </label>
+                                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                    URL/Path referto
+                                    <input type="text" class="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" data-field="attachment" value="${escapeHtml(item.attachment_path || '')}" placeholder="https://... o percorso file">
+                                </label>
+                            </div>
+                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                Note / Referto testuale
+                                <textarea rows="2" class="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500" data-field="notes">${notesVal}</textarea>
+                            </label>
+                            <div class="text-xs">${attachment}</div>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function openInvestigationsModal(id) {
+            const a = state.appointments.find((x) => x.id === id);
+            if (!a) return;
+            document.getElementById('inv_encounter_id').value = id;
+            const nameEl = document.getElementById('inv-patient-name');
+            if (nameEl) nameEl.innerText = a.paziente_nome || '--';
+            renderInvestigationsRows(a);
+            lucide.createIcons();
+            const bodies = document.querySelectorAll('#investigations-rows .accordion-body');
+            bodies.forEach((body) => {
+                body.classList.remove('open');
+                body.style.maxHeight = '0px';
+            });
+            const icons = document.querySelectorAll('#investigations-rows [data-action=\"toggle-inv-card\"] [data-lucide], #investigations-rows [data-action=\"toggle-inv-card\"] svg.lucide');
+            icons.forEach((icon) => {
+                icon.style.transform = 'rotate(0deg)';
+                icon.style.transition = 'transform 0.25s ease';
+            });
+            toggleModal('investigations-modal', true);
+        }
+
+        async function handleInvestigationsSubmit(e) {
+            e.preventDefault();
+            const form = e.currentTarget;
+            const id = parseInt(document.getElementById('inv_encounter_id').value, 10);
+            if (!Number.isInteger(id)) return;
+            const cards = [...form.querySelectorAll('[data-investigation-id]')];
+            const items = cards.map((card) => {
+                const invId = parseInt(card.dataset.investigationId, 10);
+                const outcome = card.querySelector('[data-field="outcome"]')?.value?.trim() || null;
+                const notes = card.querySelector('[data-field="notes"]')?.value?.trim() || null;
+                const attachment = card.querySelector('[data-field="attachment"]')?.value?.trim() || null;
+                return {
+                    investigation_id: invId,
+                    outcome,
+                    notes,
+                    attachment_path: attachment
+                };
+            }).filter((item) => Number.isInteger(item.investigation_id) && item.investigation_id > 0);
+
+            const existing = state.appointments.find((x) => x.id === id);
+            const payload = {
+                stato: existing?.stato || 'Accertamenti Richiesti',
+                investigations: items
+            };
+            let updated;
+            try {
+                const saved = await updateAppointmentApi(id, payload);
+                updated = updateAppointment(id, saved);
+            } catch (error) {
+                console.warn('Investigations update offline:', error);
+                updated = updateAppointment(id, { investigations: items, stato: payload.stato });
+                showToast('Backend non raggiungibile, salvataggio locale');
+            }
+            if (updated) {
+                showToast('Accertamenti aggiornati');
+                closeModal('investigations-modal');
+                filterTable('all');
+                updateKPIs();
+            }
         }
         
         function openPatientDetails(id) {
@@ -979,6 +1137,7 @@ export function registerGlobalHandlers() {
         handleNewReportSubmit,
         openOutcomeModal,
         openReport,
+        openInvestigationsModal,
         toggleModal,
         closeModal,
         showToast,

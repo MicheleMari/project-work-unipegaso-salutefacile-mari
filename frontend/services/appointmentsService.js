@@ -59,11 +59,32 @@ function normalizePayload(payload = {}) {
 
     const investigations = Array.isArray(payload.investigations)
         ? payload.investigations
-            .map((val) => parseInt(val, 10))
-            .filter((val) => Number.isInteger(val) && val > 0)
+            .map((val) => {
+                if (typeof val === 'number') {
+                    const num = parseInt(val, 10);
+                    return Number.isInteger(num) && num > 0 ? { investigation_id: num } : null;
+                }
+                if (val && typeof val === 'object') {
+                    const invId = parseInt(val.investigation_id ?? val.id ?? 0, 10);
+                    if (!Number.isInteger(invId) || invId <= 0) return null;
+                    return {
+                        investigation_id: invId,
+                        outcome: val.outcome ?? null,
+                        notes: val.notes ?? null,
+                        attachment_path: val.attachment_path ?? val.attachmentUrl ?? null,
+                    };
+                }
+                return null;
+            })
+            .filter(Boolean)
         : null;
 
     const body = { patient, encounter };
+    const patientFields = [patient.name, patient.surname, patient.fiscal_code, patient.full_name, patient.address, patient.city, patient.phone, patient.email];
+    const hasPatientInput = patientFields.some((v) => v !== undefined && v !== null && String(v).trim() !== '');
+    if (!hasPatientInput) {
+        delete body.patient;
+    }
     if (Object.prototype.hasOwnProperty.call(payload, 'investigations')) {
         body.investigations = investigations ?? [];
     }

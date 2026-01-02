@@ -26,6 +26,10 @@ const config = {
     safelist: [
         ...safeListClasses,
         ...runtimeButtonClasses,
+        "ring-2",
+        "ring-medical-500",
+        "border-medical-500",
+        "bg-medical-50",
         "bg-white", 
         "shadow-md",
         "bg-red-500", "bg-orange-500", "bg-green-500", "bg-slate-300", // Barre statistiche

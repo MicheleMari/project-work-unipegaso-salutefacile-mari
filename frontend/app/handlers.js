@@ -23,6 +23,7 @@ export async function initApp() {
     setInterval(() => document.getElementById('current-time').innerText = new Date().toLocaleTimeString('it-IT'), 1000);
     document.body.addEventListener('click', closeAllCustomSelects);
     bindUIEvents();
+    bindExamCardClicks();
 
     startAutoLockTimer();
     ['mousemove', 'mousedown', 'keypress', 'touchmove', 'scroll'].forEach(evt => {
@@ -162,6 +163,42 @@ async function loadData() {
     }
 }
 
+function bindExamCardClicks() {
+    const syncCardState = (checkbox) => {
+        const card = checkbox.closest('.exam-item');
+        if (card) {
+            card.classList.toggle('selected', checkbox.checked);
+            const shell = card.querySelector('.exam-card');
+            if (shell) {
+                shell.classList.toggle('ring-2', checkbox.checked);
+                shell.classList.toggle('ring-medical-500', checkbox.checked);
+                shell.classList.toggle('border-medical-500', checkbox.checked);
+                shell.classList.toggle('bg-medical-50', checkbox.checked);
+            }
+        }
+    };
+
+    document.addEventListener('click', (event) => {
+        const card = event.target.closest('.exam-item');
+        if (!card) return;
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        if (!checkbox) return;
+        if (event.target === checkbox) {
+            syncCardState(checkbox);
+            return;
+        }
+        event.preventDefault();
+        checkbox.checked = !checkbox.checked;
+        syncCardState(checkbox);
+    });
+
+    document.addEventListener('change', (event) => {
+        const checkbox = event.target.matches('input[name="exams"]') ? event.target : null;
+        if (!checkbox) return;
+        syncCardState(checkbox);
+    });
+}
+
 function titleCaseAddress(val) {
     if (!val) return '';
     return String(val).replace(/\b([A-Za-zÀ-ÿ])([A-Za-zÀ-ÿ]*)/g, (match, first, rest) => {
@@ -208,7 +245,8 @@ function renderInvestigationsList() {
         const safeTitle = escapeHtml(item.title || `Accertamento ${item.id}`);
         return `<label class="cursor-pointer block relative group exam-item">
             <input type="checkbox" name="exams" value="${item.id}" data-label="${safeTitle}" class="peer sr-only">
-            <div class="p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all peer-checked:border-medical-500 peer-checked:bg-medical-50 hover:bg-slate-50">
+            <div class="exam-card p-3 rounded-lg border-2 border-slate-100 flex items-center gap-3 transition-all hover:bg-slate-50">
+                <span class="exam-check shrink-0" aria-hidden="true"></span>
                 <div class="w-8 h-8 rounded-full bg-${color}-100 text-${color}-600 flex items-center justify-center shrink-0"><i data-lucide="clipboard-list" class="w-4 h-4"></i></div>
                 <span class="font-bold text-slate-700 text-xs">${safeTitle}</span>
             </div>
@@ -630,19 +668,31 @@ function closeAllCustomSelects(e) { document.querySelectorAll('.custom-select-co
         showToast('Paziente registrato'); 
         updateKPIs(); 
     }
-    function prefillInvestigations(selected = []) {
-        const ids = new Set(
-            (selected || [])
-                .map((item) => item?.investigation_id ?? item?.id ?? item)
-                .map((val) => parseInt(val, 10))
-                .filter((id) => Number.isInteger(id) && id > 0)
-        );
-        const checkboxes = document.querySelectorAll('input[name="exams"]');
-        checkboxes.forEach((el) => {
-            const id = parseInt(el.value, 10);
-            el.checked = ids.has(id);
-        });
-    }
+function prefillInvestigations(selected = []) {
+    const ids = new Set(
+        (selected || [])
+            .map((item) => item?.investigation_id ?? item?.id ?? item)
+            .map((val) => parseInt(val, 10))
+            .filter((id) => Number.isInteger(id) && id > 0)
+    );
+    const checkboxes = document.querySelectorAll('input[name="exams"]');
+    checkboxes.forEach((el) => {
+        const id = parseInt(el.value, 10);
+        const isChecked = ids.has(id);
+        el.checked = isChecked;
+        const card = el.closest('.exam-item');
+        if (card) {
+            card.classList.toggle('selected', isChecked);
+            const shell = card.querySelector('.exam-card');
+            if (shell) {
+                shell.classList.toggle('ring-2', isChecked);
+                shell.classList.toggle('ring-medical-500', isChecked);
+                shell.classList.toggle('border-medical-500', isChecked);
+                shell.classList.toggle('bg-medical-50', isChecked);
+            }
+        }
+    });
+}
     function openTriageModal(id) { const a=state.appointments.find(x=>x.id===id); document.getElementById('triage_id').value=id; document.getElementById('triage-patient-name').innerText=a.paziente_nome; document.getElementById('triage-form').reset(); renderInvestigationsList(); prefillInvestigations(a?.investigations || []); toggleModal('triage-modal', true); }
     async function handleTriageSubmit(e) { 
         e.preventDefault(); 

@@ -244,7 +244,7 @@ export const modals = () => `
                         <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
                         <input type="text" data-role="exams-search" placeholder="Cerca esame..." class="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-medical-500">
                     </div>
-                    <div id="investigations-list" class="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1">
+                    <div id="investigations-list" class="grid grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-2 pl-2 py-1">
                         <div class="col-span-2 text-xs text-slate-500 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2">
                             Caricamento accertamenti...
                         </div>
